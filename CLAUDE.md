@@ -79,17 +79,18 @@ aicli-config-bridge/
 ## Key Architecture Components
 
 ### CLI Interface
-- Built using Click or Typer for command-line interface
+- Built using Typer for command-line interface
 - Commands follow the pattern: `aicli-config-bridge <command> [options]`
-- Main commands: init, import, link, unlink, status, validate
+- Main commands: init, detect-configs, import-config, link, link-all, unlink, status, validate
+- Context management commands: import-context, link-context, create-context
 
 ### Configuration Management
 - Handles reading/writing JSON configuration files
 - Supports environment variable substitution
-- Manages profile-based configurations (development, production, etc.)
+- Manages profile-based configurations (development, production, etc.) [TODO: Not implemented]
 
 ### Symbolic Link Management
-- Cross-platform symbolic link creation and management
+- Cross-platform symbolic link creation and management [TODO: Windows support incomplete]
 - Backup existing configurations before linking
 - Validation of link integrity and status
 
@@ -103,8 +104,9 @@ aicli-config-bridge/
 ### Claude Code
 - Settings: `~/.claude/settings.json`
 - Local settings: `.claude/settings.json`, `.claude/settings.local.json`
-- Custom commands: `.claude/commands/` directory
-- MCP server configurations
+- Custom commands: `.claude/commands/` directory [TODO: Not implemented]
+- MCP server configurations [TODO: Not implemented]
+- Context files: `CLAUDE.md`
 
 ### Gemini CLI
 - User settings: `~/.gemini/settings.json`
@@ -131,6 +133,26 @@ aicli-config-bridge/
 - Use environment variables for API keys and tokens
 - Validate all user inputs
 - Secure handling of file permissions and symbolic links
+
+## Implementation Status
+
+### Completed Features ✅
+- Basic CLI interface with Typer
+- Configuration detection and import
+- Basic symbolic link management
+- Tool handlers for Claude Code and Gemini CLI
+- Context file management (CLAUDE.md, GEMINI.md)
+- Environment variable substitution
+- Test suite with 85%+ coverage
+
+### TODO: Incomplete Features ❌
+- `link-all` command implementation (cli.py:167)
+- `unlink` command implementation (cli.py:182)
+- `validate` command implementation (cli.py:216)
+- Profile-based configurations (development, production, etc.)
+- MCP server configurations
+- Custom commands management (.claude/commands/)
+- Full cross-platform support (Windows symbolic links)
 
 ## Common Development Tasks
 
