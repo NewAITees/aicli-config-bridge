@@ -82,6 +82,7 @@ aicli-config-bridge/
 - Built using Typer for command-line interface
 - Commands follow the pattern: `aicli-config-bridge <command> [options]`
 - Main commands: init, detect-configs, import-config, link, link-all, unlink, status, validate
+- User file management commands: link-user, unlink-user, status-user
 - Context management commands: import-context, link-context, create-context
 
 ### Configuration Management
@@ -142,17 +143,17 @@ aicli-config-bridge/
 - Basic symbolic link management
 - Tool handlers for Claude Code and Gemini CLI
 - Context file management (CLAUDE.md, GEMINI.md)
+- User file symbolic link management (link-user, unlink-user, status-user)
 - Environment variable substitution
 - Test suite with 85%+ coverage
+- WSL support with automatic environment detection
 
 ### TODO: Incomplete Features ❌
-- `link-all` command implementation (cli.py:167)
-- `unlink` command implementation (cli.py:182)
-- `validate` command implementation (cli.py:216)
 - Profile-based configurations (development, production, etc.)
 - MCP server configurations
 - Custom commands management (.claude/commands/)
 - Full cross-platform support (Windows symbolic links)
+- TUI interface (planned for future releases)
 
 ## Common Development Tasks
 
@@ -173,4 +174,4 @@ aicli-config-bridge/
 ### Environment Variable Substitution
 - Use `${VAR_NAME}` syntax in configuration files
 - Support default values: `${VAR_NAME:-default}`
-- Validate environment variables during configuration loading
+- Validate environment variables during configuration loading# テスト編集

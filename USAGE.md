@@ -2,7 +2,7 @@
 
 ## 概要
 
-`aicli-config-bridge` は AI CLI ツールの設定を統合管理するためのツールです。Claude Code や Gemini CLI などの設定をプロジェクトベースで管理し、シンボリックリンクを使って実際の設定場所に適用できます。
+`aicli-config-bridge` は AI CLI ツールの設定を統合管理するためのツールです。Claude Code や Gemini CLI などの設定ファイル（CLAUDE.md、GEMINI.md、settings.json等）をシンボリックリンクで管理し、ユーザーが普段使い慣れた場所から編集できるようにします。
 
 ## インストール
 
@@ -20,124 +20,110 @@ uv pip install -e .
 
 ## 基本的な使用方法
 
-### 1. プロジェクトの初期化
+### 1. ユーザー設定ファイルのリンク作成
 
 ```bash
-# 新しいプロジェクトを作成
-uv run aicli-config-bridge init my-ai-project
+# CLAUDE.md をリンク
+uv run aicli-config-bridge link-user claude-md
 
-# 既存ディレクトリで初期化
-cd my-existing-project
-uv run aicli-config-bridge init
+# GEMINI.md をリンク  
+uv run aicli-config-bridge link-user gemini-md
+
+# Claude Code の settings.json をリンク
+uv run aicli-config-bridge link-user claude-settings
+
+# Gemini CLI の settings.json をリンク
+uv run aicli-config-bridge link-user gemini-settings
 ```
 
-### 2. 既存設定の検出
+### 2. リンク状態の確認
 
 ```bash
-# システムにある AI CLI 設定を検出
-uv run aicli-config-bridge detect-configs
+uv run aicli-config-bridge status-user
 ```
 
 出力例：
 ```
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                   検出された設定                    ┃
+┃                ユーザー設定リンク状態                 ┃
 ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ ツール      │ 設定ファイル                        │ 状態        │
-├─────────────┼─────────────────────────────────────┼─────────────┤
-│ claude-code │ /home/user/.claude/settings.json   │ ✅ 検出     │
-│ gemini-cli  │ /home/user/.gemini/settings.json   │ ✅ 検出     │
-└─────────────┴─────────────────────────────────────┴─────────────┘
+│ 対象        │ ユーザーパス          │ プロジェクトパス      │ ステータス │
+├─────────────┼─────────────────────┼─────────────────────┼────────────┤
+│ claude-md   │ /home/user/CLAUDE.md │ project-configs/...  │ ✅ 正常    │
+│ gemini-md   │ /home/user/GEMINI.md │ project-configs/...  │ ✅ 正常    │
+└─────────────┴─────────────────────┴─────────────────────┴────────────┘
 ```
 
-### 3. 設定のインポート
+### 3. ファイルの編集
 
 ```bash
-# 特定のツールの設定をインポート
-uv run aicli-config-bridge import-config --tool claude-code
+# ユーザーホームから編集（普通の編集方法）
+vim ~/CLAUDE.md
+code ~/GEMINI.md
+vim ~/.claude/settings.json
 
-# インタラクティブでツールを選択
-uv run aicli-config-bridge import-config
+# プロジェクトディレクトリから編集（どちらでも同じファイル）
+vim project-configs/CLAUDE.md
+code project-configs/GEMINI.md
+vim project-configs/claude_settings.json
 ```
 
-### 4. 設定のリンク
+### 4. リンクの解除
 
 ```bash
-# 特定のツールの設定をリンク
-uv run aicli-config-bridge link --tool claude-code
-
-# すべての設定をリンク
-uv run aicli-config-bridge link-all
+# 特定のリンクを解除
+uv run aicli-config-bridge unlink-user claude-md
+uv run aicli-config-bridge unlink-user gemini-md
 ```
 
-### 5. リンク状態の確認
+## シンボリックリンクの仕組み
+
+### ファイル構成
+
+**リンク作成後の構成:**
+```
+ユーザーホーム:
+~/CLAUDE.md                     # 実体ファイル（編集対象）
+~/GEMINI.md                     # 実体ファイル（編集対象）
+~/.claude/settings.json         # 実体ファイル（編集対象）
+~/.gemini/settings.json         # 実体ファイル（編集対象）
+
+プロジェクトディレクトリ:
+project-configs/
+├── CLAUDE.md → ~/CLAUDE.md               # シンボリックリンク
+├── GEMINI.md → ~/GEMINI.md               # シンボリックリンク
+├── claude_settings.json → ~/.claude/settings.json  # シンボリックリンク
+└── gemini_settings.json → ~/.gemini/settings.json  # シンボリックリンク
+```
+
+### 双方向編集
+
+シンボリックリンクのため、どちらの場所からでも同じファイルを編集できます：
 
 ```bash
-uv run aicli-config-bridge status
+# これらはすべて同じファイルを編集
+vim ~/CLAUDE.md
+vim project-configs/CLAUDE.md
+code ~/CLAUDE.md
+code project-configs/CLAUDE.md
 ```
 
-出力例：
-```
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                  設定リンク状態                     ┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ ツール      │ ステータス    │ 設定ファイル                │
-├─────────────┼───────────────┼─────────────────────────────┤
-│ claude-code │ ✅ リンク済み │ /home/user/.claude/settings.json │
-│ gemini-cli  │ ❌ 未リンク   │ /home/user/.gemini/settings.json │
-└─────────────┴───────────────┴─────────────────────────────┘
-```
+### 利点
 
-### 6. 設定の検証
-
-```bash
-uv run aicli-config-bridge validate
-```
-
-### 7. リンクの解除
-
-```bash
-# 特定のツールのリンクを解除
-uv run aicli-config-bridge unlink --tool claude-code
-```
-
-## コンテキストファイルの管理
-
-### CLAUDE.md / GEMINI.md のインポート
-
-```bash
-# Claude Code の CLAUDE.md をインポート
-uv run aicli-config-bridge import-context --tool claude-code
-
-# Gemini CLI の GEMINI.md をインポート
-uv run aicli-config-bridge import-context --tool gemini-cli
-```
-
-### コンテキストファイルのリンク
-
-```bash
-# Claude Code の CLAUDE.md をリンク
-uv run aicli-config-bridge link-context --tool claude-code
-```
-
-### デフォルトコンテキストファイルの作成
-
-```bash
-# デフォルトの CLAUDE.md を作成
-uv run aicli-config-bridge create-context --tool claude-code
-```
+1. **使い慣れた場所での編集**: `~/CLAUDE.md` で普通にファイル編集
+2. **プロジェクト内からもアクセス**: `project-configs/CLAUDE.md` からも編集可能
+3. **自動同期**: 編集内容は即座に両方の場所に反映
+4. **バージョン管理**: プロジェクトディレクトリをGitで管理可能
 
 ## サポートされるツール
 
 ### Claude Code
-- **設定ファイル**: `~/.claude/settings.json`
-- **プロジェクト設定**: `.claude/settings.json`, `.claude/settings.local.json`
-- **コンテキストファイル**: `CLAUDE.md`
+- **コンテキストファイル**: `~/CLAUDE.md` → `project-configs/CLAUDE.md`
+- **設定ファイル**: `~/.claude/settings.json` → `project-configs/claude_settings.json`
 
 ### Gemini CLI
-- **設定ファイル**: `~/.gemini/settings.json`
-- **プロジェクト設定**: `.gemini/settings.json`
-- **コンテキストファイル**: `GEMINI.md`
+- **コンテキストファイル**: `~/GEMINI.md` → `project-configs/GEMINI.md`
+- **設定ファイル**: `~/.gemini/settings.json` → `project-configs/gemini_settings.json`
 
 ## プラットフォーム対応
 

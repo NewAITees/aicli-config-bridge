@@ -388,5 +388,206 @@ def create_context_command(
         console.print(f"[red]❌ エラー: {e}[/red]")
 
 
+@app.command("link-user")
+def link_user(
+    target: Annotated[str, typer.Argument(help="リンク対象 (claude-md, claude-settings, gemini-md, gemini-settings)")],
+) -> None:
+    """ユーザー設定ファイルをプロジェクトとシンボリックリンクする."""
+    console.print(f"[blue]🔗 {target} をリンクしています...[/blue]")
+    
+    # リンク対象のパス設定
+    user_path, project_path = _get_link_paths(target)
+    if not user_path or not project_path:
+        console.print(f"[red]❌ 不明なリンク対象: {target}[/red]")
+        console.print("利用可能な対象: claude-md, claude-settings, gemini-md, gemini-settings")
+        return
+    
+    try:
+        # ユーザーディレクトリを作成
+        user_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # ユーザー側にデフォルトファイルを作成（存在しない場合）
+        if not user_path.exists():
+            _create_default_user_file(user_path, target)
+            console.print(f"[green]✅ デフォルトファイルを作成: {user_path}[/green]")
+        
+        # プロジェクトディレクトリを作成
+        project_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # 既存のプロジェクトファイル/リンクがある場合は削除
+        if project_path.exists() or project_path.is_symlink():
+            project_path.unlink()
+        
+        # シンボリックリンクを作成（プロジェクト → ユーザー）
+        project_path.symlink_to(user_path)
+        console.print(f"[green]✅ リンク作成完了: {project_path} → {user_path}[/green]")
+        
+    except Exception as e:
+        console.print(f"[red]❌ リンク作成エラー: {e}[/red]")
+
+
+@app.command("unlink-user")
+def unlink_user(
+    target: Annotated[str, typer.Argument(help="リンク解除対象 (claude-md, claude-settings, gemini-md, gemini-settings)")],
+) -> None:
+    """ユーザー設定ファイルのシンボリックリンクを解除する."""
+    console.print(f"[yellow]🔓 {target} のリンクを解除しています...[/yellow]")
+    
+    # リンク対象のパス設定
+    user_path, project_path = _get_link_paths(target)
+    if not user_path or not project_path:
+        console.print(f"[red]❌ 不明なリンク対象: {target}[/red]")
+        console.print("利用可能な対象: claude-md, claude-settings, gemini-md, gemini-settings")
+        return
+    
+    try:
+        if not project_path.exists():
+            console.print(f"[yellow]⚠️ プロジェクトリンクが存在しません: {project_path}[/yellow]")
+            return
+        
+        if not project_path.is_symlink():
+            console.print(f"[yellow]⚠️ シンボリックリンクではありません: {project_path}[/yellow]")
+            return
+        
+        # プロジェクト側のシンボリックリンクを削除
+        project_path.unlink()
+        console.print(f"[green]✅ リンク解除完了: {project_path}[/green]")
+        
+    except Exception as e:
+        console.print(f"[red]❌ リンク解除エラー: {e}[/red]")
+
+
+@app.command("status-user")
+def status_user() -> None:
+    """ユーザー設定ファイルのリンク状態を確認する."""
+    console.print("[blue]📊 ユーザー設定リンク状態を確認しています...[/blue]")
+    
+    table = Table(title="ユーザー設定リンク状態")
+    table.add_column("対象")
+    table.add_column("ユーザーパス")
+    table.add_column("プロジェクトパス")
+    table.add_column("ステータス")
+    
+    targets = ["claude-md", "claude-settings", "gemini-md", "gemini-settings"]
+    
+    for target in targets:
+        user_path, project_path = _get_link_paths(target)
+        if not user_path:
+            continue
+        
+        # ユーザーファイルの状態
+        if not user_path.exists():
+            user_status = "[red]❌ 未作成[/red]"
+        else:
+            user_status = "[green]✅ 存在[/green]"
+        
+        # プロジェクトリンクの状態
+        if not project_path.exists():
+            project_status = "[red]❌ 未リンク[/red]"
+        elif project_path.is_symlink():
+            if project_path.readlink() == user_path:
+                project_status = "[green]✅ リンク済み[/green]"
+            else:
+                project_status = "[yellow]⚠️ 他の場所へリンク[/yellow]"
+        else:
+            project_status = "[blue]📄 通常ファイル[/blue]"
+        
+        # 全体のステータス
+        if user_status.startswith("[green]") and project_status.startswith("[green]"):
+            overall_status = "[green]✅ 正常[/green]"
+        elif user_status.startswith("[red]"):
+            overall_status = "[red]❌ ユーザーファイル未作成[/red]"
+        elif project_status.startswith("[red]"):
+            overall_status = "[red]❌ 未リンク[/red]"
+        else:
+            overall_status = "[yellow]⚠️ 問題あり[/yellow]"
+        
+        table.add_row(target, str(user_path), str(project_path), overall_status)
+    
+    console.print(table)
+
+
+def _get_link_paths(target: str) -> tuple[Optional[Path], Optional[Path]]:
+    """リンク対象のパスを取得."""
+    if target == "claude-md":
+        user_path = Path.home() / "CLAUDE.md"
+        project_path = Path.cwd() / "project-configs" / "CLAUDE.md"
+    elif target == "claude-settings":
+        user_path = Path.home() / ".claude" / "settings.json"
+        project_path = Path.cwd() / "project-configs" / "claude_settings.json"
+    elif target == "gemini-md":
+        user_path = Path.home() / "GEMINI.md"
+        project_path = Path.cwd() / "project-configs" / "GEMINI.md"
+    elif target == "gemini-settings":
+        user_path = Path.home() / ".gemini" / "settings.json"
+        project_path = Path.cwd() / "project-configs" / "gemini_settings.json"
+    else:
+        return None, None
+    
+    return user_path, project_path
+
+
+def _create_default_user_file(file_path: Path, target: str) -> None:
+    """デフォルトユーザーファイルを作成."""
+    if target == "claude-md":
+        content = """# CLAUDE.md
+
+このファイルは Claude Code のプロジェクトコンテキストファイルです。
+プロジェクトの概要、開発ガイドライン、重要な情報を記載してください。
+
+## プロジェクト概要
+
+[プロジェクトの説明をここに記載]
+
+## 開発ガイドライン
+
+[開発時に守るべきルールや慣習を記載]
+
+## 重要な情報
+
+[Claude に伝えたい重要な情報を記載]
+"""
+    elif target == "claude-settings":
+        content = """{
+  "mcp": {
+    "servers": {
+    }
+  },
+  "commands": {
+  },
+  "rules": [
+  ]
+}"""
+    elif target == "gemini-md":
+        content = """# GEMINI.md
+
+このファイルは Gemini CLI のプロジェクトコンテキストファイルです。
+プロジェクトの概要、開発ガイドライン、重要な情報を記載してください。
+
+## プロジェクト概要
+
+[プロジェクトの説明をここに記載]
+
+## 開発ガイドライン
+
+[開発時に守るべきルールや慣習を記載]
+
+## 重要な情報
+
+[Gemini に伝えたい重要な情報を記載]
+"""
+    elif target == "gemini-settings":
+        content = """{
+  "api_key": "${GEMINI_API_KEY}",
+  "model": "gemini-pro",
+  "temperature": 0.7,
+  "max_tokens": 2048
+}"""
+    else:
+        content = ""
+    
+    file_path.write_text(content, encoding="utf-8")
+
+
 if __name__ == "__main__":
     app()
