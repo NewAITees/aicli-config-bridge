@@ -1,0 +1,1 @@
+/home/perso/.claude/hooks/hook_pre_commands.sh

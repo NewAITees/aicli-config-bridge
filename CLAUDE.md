@@ -1,177 +1,148 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+このファイルは Claude Code (claude.ai/code) がこのリポジトリで作業する際のガイダンスを提供します。
 
-## Project Overview
+## プロジェクト概要
 
-`aicli-config-bridge` is a Python CLI tool that manages AI CLI tool configurations through symbolic linking. It provides centralized configuration management for tools like Claude Code and Gemini CLI, allowing configurations to be version-controlled and shared across development environments.
+`aicli-config-bridge` は、シンボリックリンクを通じて AI CLI ツールの設定を管理する Python CLI ツールです。Claude Code や Gemini CLI などのツール用の集中設定管理を提供し、設定をバージョン管理し、開発環境間で共有できます。
 
-## Development Environment Setup
+## 開発環境セットアップ
 
-This project uses modern Python tooling with `uv` as the package manager.
+このプロジェクトは `uv` をパッケージマネージャーとして使用する現代的な Python ツールチェーンを使用しています。
 
-### Initial Setup Commands
+### 初期セットアップコマンド
 
 ```bash
-# Initialize uv project (if not already done)
-uv init
-
-# Install dependencies
+# 依存関係をインストール
 uv sync
 
-# Install development dependencies
-uv add --dev pytest pytest-cov ruff mypy pre-commit
-
-# Install the package in development mode
+# 開発モードでパッケージをインストール
 uv pip install -e .
 
-# Setup pre-commit hooks
-pre-commit install
+# プリコミットフックをセットアップ
+uv run pre-commit install
 ```
 
-### Common Development Commands
+### よく使用する開発コマンド
 
 ```bash
-# Run the application
+# アプリケーションを実行
 uv run aicli-config-bridge --help
 
-# Run tests
+# テストを実行
 uv run pytest
 uv run pytest --cov=aicli_config_bridge --cov-report=term-missing
 
-# Run single test
+# 単一テストを実行
 uv run pytest tests/test_specific_module.py::test_function_name
 
-# Code quality checks
+# コード品質チェック
 uv run ruff check .
 uv run ruff format .
 uv run mypy .
 
-# Run all quality checks
+# すべての品質チェックを実行
 uv run pre-commit run --all-files
 
-# Install new package
+# 新しいパッケージをインストール
 uv add package-name
 
-# Install new dev package
+# 新しい開発依存関係をインストール
 uv add --dev package-name
 ```
 
-## Project Structure
-
-The project follows a standard Python CLI application structure:
+## プロジェクト構造
 
 ```
 aicli-config-bridge/
+├── .devcontainer/              # Dev Container設定
+│   └── devcontainer.json
 ├── src/
 │   └── aicli_config_bridge/
-│       ├── __init__.py
-│       ├── cli.py              # Main CLI interface
-│       ├── config/             # Configuration management
-│       ├── linker/             # Symbolic link management
-│       ├── tools/              # Tool-specific handlers
-│       └── utils/              # Utility functions
-├── tests/                      # Test suite
-├── pyproject.toml             # Project configuration
-└── README.md                  # Project documentation
+│       ├── cli.py              # メインCLIインターフェース（Typer使用）
+│       ├── config/             # 設定管理
+│       │   ├── manager.py      # 設定マネージャー
+│       │   └── models.py       # Pydanticモデル
+│       ├── linker/             # シンボリックリンク管理
+│       │   └── manager.py      # リンクマネージャー
+│       ├── tools/              # ツール固有ハンドラー
+│       │   ├── claude_code.py  # Claude Code統合
+│       │   ├── gemini_cli.py   # Gemini CLI統合
+│       │   ├── markdown_handler.py # コンテキストファイル管理
+│       │   └── mcp_handler.py  # MCP設定処理
+│       └── utils/              # ユーティリティ
+│           └── platform.py     # プラットフォーム検出（WSL対応）
+├── tests/                      # テストスイート
+├── project-configs/            # プロジェクト設定ファイル
+├── pyproject.toml             # プロジェクト設定
+└── README.md                  # プロジェクトドキュメント
 ```
 
-## Key Architecture Components
+## 主要アーキテクチャコンポーネント
 
-### CLI Interface
-- Built using Typer for command-line interface
-- Commands follow the pattern: `aicli-config-bridge <command> [options]`
-- Main commands: init, detect-configs, import-config, link, link-all, unlink, status, validate
-- User file management commands: link-user, unlink-user, status-user
-- Context management commands: import-context, link-context, create-context
+### CLIインターフェース（cli.py）
+- Typerを使用したコマンドラインインターフェース
+- メインコマンド: init, detect-configs, import-config, link, link-all, unlink, status, validate
+- ユーザーファイル管理: link-user, unlink-user, status-user
+- コンテキスト管理: import-context, link-context, create-context
 
-### Configuration Management
-- Handles reading/writing JSON configuration files
-- Supports environment variable substitution
-- Manages profile-based configurations (development, production, etc.) [TODO: Not implemented]
+### 設定管理（config/）
+- JSON設定ファイルの読み書き
+- 環境変数の置換（`${VAR_NAME}` 形式）
+- Pydantic を使用した設定の検証
 
-### Symbolic Link Management
-- Cross-platform symbolic link creation and management [TODO: Windows support incomplete]
-- Backup existing configurations before linking
-- Validation of link integrity and status
+### シンボリックリンク管理（linker/）
+- プラットフォーム間のシンボリックリンク作成と管理
+- リンク前の既存設定のバックアップ
+- リンクの整合性とステータス検証
 
-### Tool Integration
-- Modular design for supporting different AI CLI tools
-- Tool-specific handlers for Claude Code and Gemini CLI
-- Extensible architecture for adding new tools
+### ツール統合（tools/）
+- Claude Code と Gemini CLI 用のハンドラー
+- コンテキストファイル（CLAUDE.md, GEMINI.md）管理
+- MCP サーバー設定処理
 
-## Supported AI CLI Tools
+## サポートされているAI CLIツール
 
 ### Claude Code
-- Settings: `~/.claude/settings.json`
-- Local settings: `.claude/settings.json`, `.claude/settings.local.json`
-- Custom commands: `.claude/commands/` directory [TODO: Not implemented]
-- MCP server configurations [TODO: Not implemented]
-- Context files: `CLAUDE.md`
+- 設定ファイル: `~/.claude/settings.json`
+- プロジェクト設定: `.claude/settings.json`
+- コンテキストファイル: `CLAUDE.md`
 
 ### Gemini CLI
-- User settings: `~/.gemini/settings.json`
-- Project settings: `.gemini/settings.json`
-- Environment files: `.env`
-- Context files: `GEMINI.md`
+- ユーザー設定: `~/.gemini/settings.json`
+- プロジェクト設定: `.gemini/settings.json`
+- コンテキストファイル: `GEMINI.md`
 
-## Development Guidelines
+## 開発ガイドライン
 
-### Code Quality
-- All code must pass ruff linting and formatting
-- Type hints are required for all functions
-- Tests are required for all new functionality
-- Minimum 85% test coverage
+### コード品質要件
+- すべてのコードはruffリンティングとフォーマットを通す
+- すべての関数に型ヒントが必要
+- 新機能にはテストが必要
+- 現在のテストカバレッジは約20%（改善が必要）
 
-### Testing Strategy
-- Unit tests for individual functions and classes
-- Integration tests for CLI commands
-- Cross-platform compatibility testing
-- Mock external dependencies (filesystem, symbolic links)
+### 実装状況
 
-### Security Considerations
-- Never store sensitive information in configuration files
-- Use environment variables for API keys and tokens
-- Validate all user inputs
-- Secure handling of file permissions and symbolic links
+#### 完了済み機能 ✅
+- Typerを使用したCLIインターフェース
+- 設定の検出とインポート
+- 基本的なシンボリックリンク管理
+- Claude Code と Gemini CLI のハンドラー
+- コンテキストファイル管理
+- ユーザーファイルのシンボリックリンク管理
+- 環境変数の置換
+- 基本テストスイート（14テストが通過）
+- WSL対応のプラットフォーム検出
+- Dev Container設定
 
-## Implementation Status
+#### 既知の問題 ❌
+- mypyタイプエラーが25個あり（主にモデルの不整合）
+- ruffリンティングエラーが91個あり（コメントの全角文字、行長など）
+- 低いテストカバレッジ（20%、CLIインターフェースはテストなし）
+- プロファイル機能は未実装
+- Windows完全対応は未実装
 
-### Completed Features ✅
-- Basic CLI interface with Typer
-- Configuration detection and import
-- Basic symbolic link management
-- Tool handlers for Claude Code and Gemini CLI
-- Context file management (CLAUDE.md, GEMINI.md)
-- User file symbolic link management (link-user, unlink-user, status-user)
-- Environment variable substitution
-- Test suite with 85%+ coverage
-- WSL support with automatic environment detection
-
-### TODO: Incomplete Features ❌
-- Profile-based configurations (development, production, etc.)
-- MCP server configurations
-- Custom commands management (.claude/commands/)
-- Full cross-platform support (Windows symbolic links)
-- TUI interface (planned for future releases)
-
-## Common Development Tasks
-
-### Adding a New AI CLI Tool
-1. Create handler in `src/aicli_config_bridge/tools/`
-2. Define configuration schema and locations
-3. Implement import/export functionality
-4. Add CLI commands for the tool
-5. Write comprehensive tests
-
-### Adding New CLI Commands
-1. Define command in `src/aicli_config_bridge/cli.py`
-2. Implement command logic in appropriate module
-3. Add help text and parameter validation
-4. Write tests for the command
-5. Update documentation
-
-### Environment Variable Substitution
-- Use `${VAR_NAME}` syntax in configuration files
-- Support default values: `${VAR_NAME:-default}`
-- Validate environment variables during configuration loading# テスト編集
+### 開発時の注意事項
+- 日本語コメントの全角文字（：（）など）はruffで警告される
+- CLIコマンドは広範囲にテストされていない
+- 型定義の一貫性を保つ必要がある

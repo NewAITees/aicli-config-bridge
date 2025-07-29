@@ -1,0 +1,1 @@
+/home/perso/.claude/hooks/hook_stop_words.sh
