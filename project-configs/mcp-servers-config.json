@@ -1,0 +1,39 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/home/perso/Documents",
+        "/home/perso/Desktop",
+        "/home/perso/analysis"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": ""
+      }
+    },
+    "ollama-mcp-server": {
+      "command": "python",
+      "args": [
+        "-m",
+        "ollama_mcp_server"
+      ],
+      "env": {
+        "model": "deepseek-r1:14b"
+      }
+    }
+  }
+}
