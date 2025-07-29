@@ -13,12 +13,12 @@
 
 Usage:
     from aicli_config_bridge.config import ConfigManager
-    
+
     manager = ConfigManager()
-    
+
     # 設定を検出
     detected = manager.detect_tool_configs()
-    
+
     # 環境変数を置換
     config_data = manager.substitute_env_vars(config_data)
 """

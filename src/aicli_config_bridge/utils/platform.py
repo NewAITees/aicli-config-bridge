@@ -8,10 +8,10 @@
 
 Usage:
     from aicli_config_bridge.utils.platform import is_wsl, get_platform_info
-    
+
     if is_wsl():
         print("WSL環境で実行中")
-    
+
     info = get_platform_info()
     print(f"Platform: {info.os_name}, WSL: {info.is_wsl}")
 """
@@ -35,7 +35,7 @@ class PlatformInfo:
 
 def is_wsl() -> bool:
     """WSL環境で実行しているかを判定.
-    
+
     Returns:
         bool: WSL環境の場合True
     """
@@ -65,7 +65,7 @@ def is_wsl() -> bool:
 
 def get_platform_info() -> PlatformInfo:
     """プラットフォーム情報を取得.
-    
+
     Returns:
         PlatformInfo: プラットフォーム情報
     """
@@ -91,10 +91,10 @@ def get_platform_info() -> PlatformInfo:
 
 def get_config_directory(app_name: str) -> Path:
     """アプリケーション設定ディレクトリを取得.
-    
+
     Args:
         app_name: アプリケーション名
-    
+
     Returns:
         Path: 設定ディレクトリパス
     """

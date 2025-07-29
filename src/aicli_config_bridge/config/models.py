@@ -16,7 +16,7 @@ Pydantic を使用して型安全な設定データの管理を行います。
 
 Usage:
     from aicli_config_bridge.config.models import ProjectConfig, ToolType
-    
+
     config = ProjectConfig(
         name="my-project",
         tools={

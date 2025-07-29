@@ -10,13 +10,13 @@
 Usage:
     from aicli_config_bridge.linker import LinkManager
     from aicli_config_bridge.config import ConfigManager
-    
+
     config_manager = ConfigManager()
     link_manager = LinkManager(config_manager)
-    
+
     # シンボリックリンクを作成
     link_info = link_manager.create_link(source_path, target_path)
-    
+
     # リンクを削除
     link_manager.remove_link(target_path)
 """

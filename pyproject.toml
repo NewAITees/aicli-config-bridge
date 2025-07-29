@@ -48,6 +48,8 @@ select = [
 ignore = [
     "F401",  # unused import
     "F841",  # unused variable
+    "RUF002", # ambiguous unicode character in docstring
+    "RUF003", # ambiguous unicode character in comment
 ]
 unfixable = ["F401", "F841"]
 
