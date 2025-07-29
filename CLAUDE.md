@@ -121,6 +121,32 @@ aicli-config-bridge/
 - 新機能にはテストが必要
 - 現在のテストカバレッジは約20%（改善が必要）
 
+### ruff設定ガイドライン
+
+日本語プロジェクトでは文字コードエラーが頻発するため、以下のruff設定を推奨します：
+
+#### pyproject.tomlの推奨設定
+```toml
+[tool.ruff.lint]
+ignore = [
+    "RUF002", # docstring内の全角文字エラーを無視
+    "RUF003", # comment内の全角文字エラーを無視
+    "E501",   # 行長制限（日本語では超過しやすい場合のみ）
+]
+```
+
+#### よくある日本語文字コードエラー
+- `RUF002`: docstring内の全角コロン（：）、括弧（（））
+- `RUF003`: コメント内の全角文字
+- `E501`: 日本語文字列による行長超過
+
+これらのエラーは品質に影響しないため、ignoreに追加することを推奨します。
+
+#### コード内での対応
+- 英語docstringを使用する場合は、半角文字を使用
+- 日本語ドキュメントを保持したい場合は、上記ignore設定を使用
+- CI/CDで確実にチェックが通過するよう設定を統一
+
 ### 実装状況
 
 #### 完了済み機能 ✅
@@ -136,13 +162,49 @@ aicli-config-bridge/
 - Dev Container設定
 
 #### 既知の問題 ❌
-- mypyタイプエラーが25個あり（主にモデルの不整合）
-- ruffリンティングエラーが91個あり（コメントの全角文字、行長など）
 - 低いテストカバレッジ（20%、CLIインターフェースはテストなし）
 - プロファイル機能は未実装
 - Windows完全対応は未実装
 
+#### 解決済み問題 ✅
+- ~~mypyタイプエラーが25個あり（主にモデルの不整合）~~
+- ~~ruffリンティングエラーが91個あり（コメントの全角文字、行長など）~~ → ruff設定で解決
+
 ### 開発時の注意事項
-- 日本語コメントの全角文字（：（）など）はruffで警告される
+- 日本語ドキュメントを使用する場合は、上記ruff設定ガイドラインに従う
 - CLIコマンドは広範囲にテストされていない
 - 型定義の一貫性を保つ必要がある
+- CI/CDパイプラインですべてのチェックが通過することを確認
+
+## 新しいプロジェクトでのruff設定テンプレート
+
+新規日本語プロジェクトを開始する際は、以下の設定をpyproject.tomlに追加することを推奨：
+
+```toml
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "ANN",  # type annotation
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "I",    # isort
+    "RUF",  # ruff specific rules
+    "W",    # pycodestyle warnings
+]
+ignore = [
+    "F401",  # unused import
+    "F841",  # unused variable
+    "RUF002", # ambiguous unicode character in docstring
+    "RUF003", # ambiguous unicode character in comment
+]
+unfixable = ["F401", "F841"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/**/*.py" = ["ANN"]
+```
+
+このテンプレートを使用することで、日本語プロジェクトでのruffエラーを予防できます。
