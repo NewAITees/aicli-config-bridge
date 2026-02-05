@@ -4,36 +4,34 @@ A streamlined configuration management tool for AI CLI applications, enabling ce
 
 ## Overview
 
-`aicli-config-bridge` addresses the common challenge of managing AI CLI tool configurations that are typically scattered across system-specific locations. This tool allows developers to maintain all AI CLI configurations within a single project directory, making them easily portable, version-controllable, and shareable across development environments.
+`aicli-config-bridge` addresses the common challenge of managing AI CLI tool configurations that are typically scattered across system-specific locations. This tool allows developers to maintain all AI CLI configurations within a single project directory, making them easily portable, version-controllable, and shareable across development environments. Current releases focus on symlink-based management for macOS/Linux/WSL, with Windows native support handled as file copy when symlinks are unavailable.
 
 ## Features
 
 - **Centralized Configuration Management**: Manage all AI CLI tool configurations from a single project directory
-- **Symbolic Link Automation**: Automatically creates and manages symbolic links between project configurations and system locations
-- **Multiple Profile Support**: Support for different configuration profiles (development, production, personal, team)
-- **Cross-Platform Compatibility**: Works on macOS, Linux, and Windows (WSL)
+- **Symbolic Link Automation**: Automatically creates and manages symbolic links between project configurations and system locations (or file copy on Windows native)
+- **Cross-Platform Compatibility**: Works on macOS, Linux, and Windows (WSL); Windows native uses copy in place of symlink
 - **Backup and Restore**: Safely backup existing configurations before linking
 - **Validation**: Verify configuration integrity and link status
+- **Context File Management**: Import and link `CLAUDE.md` / `GEMINI.md` context files
 
 ## Supported AI CLI Tools
 
 ### Claude Code
-- **Configuration Location**: `~/.claude/settings.json`
-- **Project Settings**: `.claude/settings.json`, `.claude/settings.local.json`
+- **Configuration Location**: `~/.claude/settings.json`, `~/.claude/settings.local.json`
+- **Project Settings**: `configs/claude-code/settings.json`, `configs/claude-code/settings.local.json`
 - **MCP Servers**: Model Context Protocol server configurations
-- **Custom Commands**: `.claude/commands/` directory management
 
 ### Gemini CLI
 - **User Settings**: `~/.gemini/settings.json`
-- **Project Settings**: `.gemini/settings.json`
-- **Environment Variables**: `.env` file management
+- **Project Settings**: `configs/gemini-cli/settings.json`
 - **Context Files**: `GEMINI.md` project context files
 
 ## Installation
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.12 or higher
 - Node.js 18+ (for AI CLI tools)
 - Git (recommended for version control)
 
@@ -69,8 +67,8 @@ aicli-config-bridge link-all
 
 ```bash
 # Import existing configurations from system locations
-aicli-config-bridge import --tool claude-code
-aicli-config-bridge import --tool gemini-cli
+aicli-config-bridge import-config --tool claude-code
+aicli-config-bridge import-config --tool gemini-cli
 
 # Link configurations to system locations
 aicli-config-bridge link --tool claude-code
@@ -84,25 +82,13 @@ my-ai-configs/
 ├── configs/
 │   ├── claude-code/
 │   │   ├── settings.json
-│   │   ├── settings.local.json
-│   │   └── commands/
-│   │       └── custom-command.md
+│   │   └── settings.local.json
 │   ├── gemini-cli/
-│   │   ├── settings.json
-│   │   ├── .env
-│   │   └── GEMINI.md
-│   └── profiles/
-│       ├── development/
-│       ├── production/
-│       └── personal/
-├── scripts/
-│   ├── setup.py
-│   ├── validate.py
-│   └── backup.py
+│   │   └── settings.json
 ├── backups/
-│   └── [timestamp]/
 ├── aicli-config.json
-└── README.md
+├── CLAUDE.md
+└── GEMINI.md
 ```
 
 ## Configuration Examples
@@ -160,7 +146,7 @@ aicli-config-bridge init [project-name]
 aicli-config-bridge detect-configs
 
 # Import configurations from system
-aicli-config-bridge import --tool [tool-name]
+aicli-config-bridge import-config --tool [tool-name]
 ```
 
 ### Linking Management
@@ -177,32 +163,35 @@ aicli-config-bridge unlink --tool [tool-name]
 
 # Check link status
 aicli-config-bridge status
+
+# Validate link integrity
+aicli-config-bridge validate
 ```
 
-### Profile Management
+### Context File Management
 
 ```bash
-# Create new profile
-aicli-config-bridge profile create [profile-name]
+# Import context file (CLAUDE.md / GEMINI.md)
+aicli-config-bridge import-context --tool [tool-name]
 
-# Switch to profile
-aicli-config-bridge profile switch [profile-name]
+# Link context file to system location
+aicli-config-bridge link-context --tool [tool-name]
 
-# List available profiles
-aicli-config-bridge profile list
+# Create default context file in project
+aicli-config-bridge create-context --tool [tool-name]
 ```
 
-### Backup and Restore
+### Legacy User File Linking
 
 ```bash
-# Create backup
-aicli-config-bridge backup
+# Link user files into project-configs/ (legacy workflow)
+aicli-config-bridge link-user [claude-md|claude-settings|gemini-md|gemini-settings]
 
-# Restore from backup
-aicli-config-bridge restore [backup-timestamp]
+# Unlink user files
+aicli-config-bridge unlink-user [claude-md|claude-settings|gemini-md|gemini-settings]
 
-# List available backups
-aicli-config-bridge backup list
+# Check status of user file links
+aicli-config-bridge status-user
 ```
 
 ## Advanced Usage
@@ -223,24 +212,11 @@ The tool supports environment variable substitution in configuration files:
 }
 ```
 
-### Team Configuration Sharing
-
-```bash
-# Export configuration for sharing
-aicli-config-bridge export --profile team
-
-# Import shared configuration
-aicli-config-bridge import --from-file team-config.json
-```
-
-### Validation and Health Checks
+### Validation
 
 ```bash
 # Validate all configurations
 aicli-config-bridge validate
-
-# Health check for specific tool
-aicli-config-bridge health --tool claude-code
 ```
 
 ## Security Considerations
@@ -250,36 +226,9 @@ aicli-config-bridge health --tool claude-code
 - **Link Permissions**: Ensure proper file permissions on linked configurations
 - **Version Control**: Use `.gitignore` for sensitive files and local configurations
 
-## Troubleshooting
-
-### Common Issues
-
-**Broken Symbolic Links**
-```bash
-aicli-config-bridge repair --tool [tool-name]
-```
-
-**Permission Errors**
-```bash
-# Fix file permissions
-aicli-config-bridge fix-permissions
-```
-
-**Configuration Validation Errors**
-```bash
-# Validate and show detailed errors
-aicli-config-bridge validate --verbose
-```
-
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-### Development Setup
+## Development Setup
 
 ```bash
-git clone https://github.com/yourusername/aicli-config-bridge.git
-cd aicli-config-bridge
 pip install -e ".[dev]"
 pre-commit install
 ```
@@ -291,20 +240,6 @@ pytest tests/
 pytest --cov=aicli_config_bridge tests/
 ```
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) by Anthropic
-- [Gemini CLI](https://github.com/google-gemini/gemini-cli) by Google
-- [Model Context Protocol](https://modelcontextprotocol.io/) community
-
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
-
 ---
 
-**Note**: This tool manages symbolic links to system configuration files. Always backup your existing configurations before using this too
+**Note**: This tool manages symbolic links to system configuration files. Always back up existing configurations before using it.

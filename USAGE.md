@@ -1,257 +1,169 @@
-# aicli-config-bridge 使用ガイド
+# 開発計画書（aicli-config-bridge）
 
-## 概要
+最終更新: 2026-02-05
 
-`aicli-config-bridge` は AI CLI ツールの設定を統合管理するためのツールです。Claude Code や Gemini CLI などの設定ファイル（CLAUDE.md、GEMINI.md、settings.json等）をシンボリックリンクで管理し、ユーザーが普段使い慣れた場所から編集できるようにします。
+## 目的
 
-## インストール
+- WSL と Windows のユーザー環境を分離して管理できるようにする
+- Windows はシンボリックリンク非依存で「管理しやすい」運用を実現する
+- アプリ起動後に人が選択しながら進められる操作体験を提供する
 
-```bash
-# リポジトリをクローン
-git clone <repository-url>
-cd aicli-config-bridge
+## 背景と課題
 
-# 依存関係をインストール
-uv sync
+- 現在の運用は WSL 前提で、Windows ネイティブはコピー運用のみ
+- 既存ドキュメントは現状の実装と乖離しており再利用しづらい
+- 一括コマンド前提の UI は人間の操作に向いていない
 
-# 開発モードでインストール
-uv pip install -e .
+## 方針（要件1）
+
+### 環境分離
+
+- `symbolicLink/` を `symbolicLink/wsl/` と `symbolicLink/windows/` に分割
+- WSL/Windows で同一の構成・同一のファイル名を維持
+- どちらも「プロジェクト内管理」を基本とする
+
+### Windows 管理方式（シンボリックリンク無し）
+
+- Windows はコピー運用を基本とする
+- 同期状態を `aicli-state.json` に記録し、差分を検知する
+- 同期方向は人が選ぶ（勝手に上書きしない）
+- 破損・差分・未管理を明示的に表示する
+
+## 詳細計画
+
+## 方向性レビュー（要点）
+
+### 良い点
+
+- WSL/Windows の環境分離方針は妥当
+- 状態管理と差分検知の導入はコピー運用に必須
+- 対話型 UI は安全性の面で有効
+
+### 懸念点と改善案（採用方針）
+
+1. **設定ファイルの二重管理**
+   - 同一内容が `symbolicLink/wsl` と `symbolicLink/windows` に並ぶと保守負荷が高い
+   - **採用案**: 共通ベース + 環境差分（override）方式
+
+```
+configs/
+├── base/              # 共通設定（バージョン管理対象）
+│   ├── CLAUDE.md
+│   └── claude_settings.json
+└── overrides/         # 環境固有の上書き（gitignore推奨）
+    ├── wsl/
+    └── windows/
+
+targets/
+├── wsl/               # WSL 用のリンク配置
+└── windows/           # Windows 用のコピー先
 ```
 
-## 基本的な使用方法
+2. **状態管理の粒度**
+   - 方向固定の `direction` だけでは双方向同期に弱い
+   - **採用案**: project/target それぞれの hash と mtime を保存し、競合を判定
 
-### 1. ユーザー設定ファイルのリンク作成
+3. **Windows 側の正本**
+   - **採用方針**: 両方向同期を許可。ただし競合時は必ず人に確認
 
-```bash
-# CLAUDE.md をリンク
-uv run aicli-config-bridge link-user claude-md
+4. **対話型 UI の操作フロー**
+   - 既定動作を用意し、手動メニューは必要時に限定
+   - **採用案**: `status` と `sync` を中心に設計
 
-# GEMINI.md をリンク  
-uv run aicli-config-bridge link-user gemini-md
-
-# Claude Code の settings.json をリンク
-uv run aicli-config-bridge link-user claude-settings
-
-# Gemini CLI の settings.json をリンク
-uv run aicli-config-bridge link-user gemini-settings
+```
+status: 破壊的操作なしで差分表示
+sync --interactive: 手動選択
+sync --auto: 自動判定 + 競合時のみ確認
 ```
 
-### 2. リンク状態の確認
+5. **テスト戦略**
+   - 優先度は状態管理・ファイル操作を最上位に
+   - CLI 表示は後回しでよい
 
-```bash
-uv run aicli-config-bridge status-user
-```
+## 詳細計画（更新版）
 
-出力例：
-```
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                ユーザー設定リンク状態                 ┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ 対象        │ ユーザーパス          │ プロジェクトパス      │ ステータス │
-├─────────────┼─────────────────────┼─────────────────────┼────────────┤
-│ claude-md   │ /home/user/CLAUDE.md │ project-configs/...  │ ✅ 正常    │
-│ gemini-md   │ /home/user/GEMINI.md │ project-configs/...  │ ✅ 正常    │
-└─────────────┴─────────────────────┴─────────────────────┴────────────┘
-```
+### フェーズ 1: 基盤整備（破壊的変更なし）
 
-### 3. ファイルの編集
+1. テストカバレッジを 40% 以上に引き上げ
+2. 既存機能のドキュメント更新（現状と一致させる）
+3. WSL/Windows 判定ロジックの整理とテスト追加
 
-```bash
-# ユーザーホームから編集（普通の編集方法）
-vim ~/CLAUDE.md
-code ~/GEMINI.md
-vim ~/.claude/settings.json
+### フェーズ 2: 状態管理の導入
 
-# プロジェクトディレクトリから編集（どちらでも同じファイル）
-vim project-configs/CLAUDE.md
-code project-configs/GEMINI.md
-vim project-configs/claude_settings.json
-```
+1. `aicli-state.json` のスキーマ設計
+2. ハッシュ計算・差分検知ロジックの実装
+3. 状態管理のテスト（この段階で 60% 目標）
 
-### 4. リンクの解除
+### フェーズ 3: Windows 対応強化
 
-```bash
-# 特定のリンクを解除
-uv run aicli-config-bridge unlink-user claude-md
-uv run aicli-config-bridge unlink-user gemini-md
-```
+1. コピー同期ロジックの実装
+2. 競合検知と解決フロー
+3. Windows 環境での E2E テスト
 
-## シンボリックリンクの仕組み
+### フェーズ 4: ディレクトリ再設計
 
-### ファイル構成
+1. 共通設定ベース方式の実装（`configs/base` + `overrides`）
+2. 既存ファイルの移行ツール作成
+3. 移行ガイド作成
 
-**リンク作成後の構成:**
-```
-ユーザーホーム:
-~/CLAUDE.md                     # 実体ファイル（編集対象）
-~/GEMINI.md                     # 実体ファイル（編集対象）
-~/.claude/settings.json         # 実体ファイル（編集対象）
-~/.gemini/settings.json         # 実体ファイル（編集対象）
+### フェーズ 5: 対話型 UI
 
-プロジェクトディレクトリ:
-project-configs/
-├── CLAUDE.md → ~/CLAUDE.md               # シンボリックリンク
-├── GEMINI.md → ~/GEMINI.md               # シンボリックリンク
-├── claude_settings.json → ~/.claude/settings.json  # シンボリックリンク
-└── gemini_settings.json → ~/.gemini/settings.json  # シンボリックリンク
-```
+1. 選択式メニューの実装
+2. 差分表示の改善
+3. 実行結果の視覚化
 
-### 双方向編集
+### フェーズ 6: 既存機能の統合
 
-シンボリックリンクのため、どちらの場所からでも同じファイルを編集できます：
+1. 新旧コマンドの互換レイヤ
+2. 段階的な移行パス提供
+3. 最終的なドキュメント整備
 
-```bash
-# これらはすべて同じファイルを編集
-vim ~/CLAUDE.md
-vim project-configs/CLAUDE.md
-code ~/CLAUDE.md
-code project-configs/CLAUDE.md
-```
+## 仕様メモ（暫定）
 
-### 利点
-
-1. **使い慣れた場所での編集**: `~/CLAUDE.md` で普通にファイル編集
-2. **プロジェクト内からもアクセス**: `project-configs/CLAUDE.md` からも編集可能
-3. **自動同期**: 編集内容は即座に両方の場所に反映
-4. **バージョン管理**: プロジェクトディレクトリをGitで管理可能
-
-## サポートされるツール
-
-### Claude Code
-- **コンテキストファイル**: `~/CLAUDE.md` → `project-configs/CLAUDE.md`
-- **設定ファイル**: `~/.claude/settings.json` → `project-configs/claude_settings.json`
-
-### Gemini CLI
-- **コンテキストファイル**: `~/GEMINI.md` → `project-configs/GEMINI.md`
-- **設定ファイル**: `~/.gemini/settings.json` → `project-configs/gemini_settings.json`
-
-## プラットフォーム対応
-
-### Linux / macOS / WSL
-- シンボリックリンクを使用
-- 完全な双方向同期
-
-### Windows (ネイティブ)
-- ファイルコピーを使用
-- 管理者権限不要
-
-## 設定ファイルの構造
-
-### プロジェクト設定ファイル (`config.json`)
+### aicli-config.json（拡張案）
 
 ```json
 {
-  "name": "my-project",
-  "description": "プロジェクトの説明",
-  "tools": {
-    "claude-code": {
-      "system_config_path": "/home/user/.claude/settings.json",
-      "project_config_path": "./configs/claude-settings.json",
-      "system_context_path": "/home/user/CLAUDE.md",
-      "project_context_path": "./CLAUDE.md",
-      "is_enabled": true
+  "targets": {
+    "wsl": {
+      "mode": "symlink",
+      "base_dir": "./symbolicLink/wsl"
     },
-    "gemini-cli": {
-      "system_config_path": "/home/user/.gemini/settings.json", 
-      "project_config_path": "./configs/gemini-settings.json",
-      "system_context_path": "/home/user/GEMINI.md",
-      "project_context_path": "./GEMINI.md",
-      "is_enabled": true
+    "windows": {
+      "mode": "copy",
+      "base_dir": "./symbolicLink/windows"
     }
   }
 }
 ```
 
-### 環境変数の使用
-
-設定ファイルでは環境変数を使用できます：
+### aicli-state.json（新規・更新案）
 
 ```json
 {
-  "api_key": "${CLAUDE_API_KEY}",
-  "workspace": "${WORKSPACE_PATH:-./workspace}",
-  "debug": "${DEBUG:-false}"
+  "items": [
+    {
+      "id": "claude-md",
+      "target": "windows",
+      "path": "C:/Users/.../CLAUDE.md",
+      "project_hash": "sha256:...",
+      "project_mtime": "2026-02-04T12:34:56Z",
+      "target_hash": "sha256:...",
+      "target_mtime": "2026-02-04T13:00:00Z",
+      "conflict": false,
+      "last_sync_direction": "project_to_target"
+    }
+  ]
 }
 ```
 
-## トラブルシューティング
+## 非目標
 
-### よくある問題
+- WSL/Windows 間の自動同期（自動上書き）は行わない
+- 既存の一括コマンドを完全に廃止することは当面しない
 
-1. **権限エラー**
-   ```bash
-   # WSL で実行を推奨
-   # Windows の場合は管理者権限で実行
-   ```
+## 次の決定事項
 
-2. **設定ファイルが見つからない**
-   ```bash
-   # 設定ファイルの場所を確認
-   uv run aicli-config-bridge detect-configs
-   ```
-
-3. **リンクが壊れている**
-   ```bash
-   # 設定を検証
-   uv run aicli-config-bridge validate
-   
-   # リンクを再作成
-   uv run aicli-config-bridge unlink --tool claude-code
-   uv run aicli-config-bridge link --tool claude-code
-   ```
-
-### デバッグ
-
-```bash
-# 詳細なログを表示
-export DEBUG=1
-uv run aicli-config-bridge status
-```
-
-## 高度な使用方法
-
-### 複数のプロジェクトでの使用
-
-```bash
-# プロジェクトA
-cd /path/to/project-a
-uv run aicli-config-bridge init project-a
-uv run aicli-config-bridge import-config --tool claude-code
-uv run aicli-config-bridge link --tool claude-code
-
-# プロジェクトB
-cd /path/to/project-b  
-uv run aicli-config-bridge init project-b
-uv run aicli-config-bridge import-config --tool claude-code
-uv run aicli-config-bridge link --tool claude-code
-```
-
-### バックアップと復元
-
-```bash
-# 設定をバックアップ（自動で実行）
-uv run aicli-config-bridge link --tool claude-code
-
-# バックアップから復元
-uv run aicli-config-bridge unlink --tool claude-code
-```
-
-## 開発者向け情報
-
-### 新しいツールの追加
-
-1. `src/aicli_config_bridge/tools/` にハンドラーを追加
-2. `config/models.py` でツールタイプを定義
-3. テストを作成
-
-### 貢献
-
-```bash
-# テストを実行
-uv run pytest
-
-# コード品質チェック
-uv run ruff check .
-uv run ruff format .
-uv run mypy .
-```
+1. Windows 側の変更をどこまで許可するか（競合時の UX 方針）
+2. 既存の `link-user` を残すか段階的に置換するか
+3. `configs/` + `targets/` 構成への移行タイミング
