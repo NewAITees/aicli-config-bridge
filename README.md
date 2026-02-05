@@ -51,34 +51,32 @@ pip install -e .
 
 ## Quick Start
 
+### For New Contributors
+
+```bash
+# Install dependencies
+uv sync
+
+# Setup symbolic links interactively
+uv run aicli-config-bridge setup
+```
+
+The setup tool will guide you through creating all necessary links.
+See `docs/SETUP_GUIDE.md` for details.
+
 ### Initialize a New Configuration Project
 
 ```bash
 # Create a new configuration project
 aicli-config-bridge init my-ai-configs
 cd my-ai-configs
-
-# Setup configurations for your tools
-aicli-config-bridge detect-configs
-aicli-config-bridge link-all
-```
-
-### Import Existing Configurations
-
-```bash
-# Import existing configurations from system locations
-aicli-config-bridge import-config --tool claude-code
-aicli-config-bridge import-config --tool gemini-cli
-
-# Link configurations to system locations
-aicli-config-bridge link --tool claude-code
-aicli-config-bridge link --tool gemini-cli
 ```
 
 ## Directory Structure
 
 ```
 my-ai-configs/
+├── aicli-links.json
 ├── configs/
 │   ├── claude-code/
 │   │   ├── settings.json
@@ -136,87 +134,12 @@ my-ai-configs/
 
 ## Commands Reference
 
-### Initialization and Setup
-
 ```bash
-# Initialize new configuration project
+# Initialize a new project and create aicli-links.json
 aicli-config-bridge init [project-name]
 
-# Detect existing configurations
-aicli-config-bridge detect-configs
-
-# Import configurations from system
-aicli-config-bridge import-config --tool [tool-name]
-```
-
-### Linking Management
-
-```bash
-# Link all configurations
-aicli-config-bridge link-all
-
-# Link specific tool
-aicli-config-bridge link --tool [tool-name]
-
-# Unlink configurations
-aicli-config-bridge unlink --tool [tool-name]
-
-# Check link status
-aicli-config-bridge status
-
-# Validate link integrity
-aicli-config-bridge validate
-```
-
-### Context File Management
-
-```bash
-# Import context file (CLAUDE.md / GEMINI.md)
-aicli-config-bridge import-context --tool [tool-name]
-
-# Link context file to system location
-aicli-config-bridge link-context --tool [tool-name]
-
-# Create default context file in project
-aicli-config-bridge create-context --tool [tool-name]
-```
-
-### Legacy User File Linking
-
-```bash
-# Link user files into project-configs/ (legacy workflow)
-aicli-config-bridge link-user [claude-md|claude-settings|gemini-md|gemini-settings]
-
-# Unlink user files
-aicli-config-bridge unlink-user [claude-md|claude-settings|gemini-md|gemini-settings]
-
-# Check status of user file links
-aicli-config-bridge status-user
-```
-
-## Advanced Usage
-
-### Environment Variable Management
-
-The tool supports environment variable substitution in configuration files:
-
-```json
-{
-  "mcpServers": {
-    "github": {
-      "env": {
-        "GITHUB_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
-      }
-    }
-  }
-}
-```
-
-### Validation
-
-```bash
-# Validate all configurations
-aicli-config-bridge validate
+# Run interactive setup based on aicli-links.json
+aicli-config-bridge setup
 ```
 
 ## Security Considerations

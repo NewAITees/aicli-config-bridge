@@ -1,12 +1,5 @@
-"""AI CLI Configuration Bridge Package.
-
-A streamlined configuration management tool for AI CLI applications,
-enabling centralized and version-controlled configuration management
-through symbolic linking.
-"""
-
-__version__ = "0.1.0"
-__author__ = "Your Name"
-__email__ = "your.email@example.com"
+"""aicli-config-bridge package."""
 
 __all__ = ["__version__"]
+
+__version__ = "0.1.0"
