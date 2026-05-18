@@ -14,6 +14,17 @@ class LinkItemType(str, Enum):
     DIRECTORY = "directory"
 
 
+class LinkStatus(str, Enum):
+    """リンク状態."""
+
+    LINKED = "linked"
+    MISSING_TARGET = "missing_target"
+    BROKEN_LINK = "broken_link"
+    WRONG_LINK = "wrong_link"
+    EXISTING_FILE = "existing_file"
+    MISSING_SOURCE = "missing_source"
+
+
 class LinkItem(BaseModel):
     """リンク設計図の個別アイテム."""
 
@@ -21,7 +32,10 @@ class LinkItem(BaseModel):
     name: str = Field(..., description="人間が読める説明")
     type: LinkItemType = Field(..., description="リンク対象の種類")
     source: str = Field(..., description="ソースパス(相対パス)")
-    target: str = Field(..., description="ターゲットパス(~使用可能)")
+    target: str = Field(..., description="ターゲットパス(~使用可能、Linux/Mac/WSL共通)")
+    target_windows: str | None = Field(
+        default=None, description="Windowsネイティブ用ターゲットパス(%USERPROFILE%使用可能)"
+    )
     create_if_missing: bool = Field(default=False, description="ファイルがない場合に作成")
     default_content: str | None = Field(default=None, description="デフォルト内容")
 

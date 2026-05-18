@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -14,7 +15,26 @@ from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
 
-from .models import LinkItem, LinkItemType, LinksConfig
+from .models import LinkItem, LinkItemType, LinksConfig, LinkStatus
+
+
+def _detect_platform() -> str:
+    """実行プラットフォームを検出する。
+
+    Returns:
+        str: "windows" / "wsl" / "darwin" / "linux"
+    """
+    if sys.platform == "win32":
+        return "windows"
+    if sys.platform == "darwin":
+        return "darwin"
+    try:
+        proc_version = Path("/proc/version").read_text(encoding="utf-8").lower()
+        if "microsoft" in proc_version:
+            return "wsl"
+    except OSError:
+        pass
+    return "linux"
 
 
 class LinkSetup:
@@ -95,6 +115,162 @@ class LinkSetup:
 
         self._show_summary(results)
 
+    def apply_links(
+        self,
+        ids: list[str] | None = None,
+        conflict_strategy: str = "backup",
+        dry_run: bool = False,
+    ) -> dict[str, list[Any]]:
+        """非対話でリンクを適用（AI向け）.
+
+        Args:
+            ids: 適用するリンクID一覧。Noneの場合は全件
+            conflict_strategy: 競合時の処理（backup/overwrite/skip）
+            dry_run: 変更は行わず、実行内容のみ表示
+        """
+        config = self.load_config()
+        links = config.links
+
+        if ids is not None:
+            link_map = {link.id: link for link in links}
+            unknown = [id_ for id_ in ids if id_ not in link_map]
+            if unknown:
+                self.console.print(f"[yellow]⚠️ 不明なID: {', '.join(unknown)}[/yellow]")
+            links = [link_map[id_] for id_ in ids if id_ in link_map]
+
+        if dry_run:
+            self.console.print("[yellow]🧪 dry-run: 変更は行いません[/yellow]")
+
+        results: dict[str, list[Any]] = {"created": [], "linked": [], "skipped": [], "errors": []}
+
+        for link in links:
+            try:
+                action = self._process_link_non_interactive(
+                    link, conflict_strategy=conflict_strategy, dry_run=dry_run
+                )
+                results[action].append(link.id)
+            except Exception as exc:
+                self.console.print(f"[red]❌ {link.id}: {exc}[/red]")
+                results["errors"].append((link.id, str(exc)))
+
+        self._show_summary(results)
+        return results
+
+    def list_links(self) -> list[LinkItem]:
+        """リンク一覧を取得."""
+        return self.load_config().links
+
+    def get_link_map(self) -> dict[str, LinkItem]:
+        """リンクIDとリンク情報のマップを取得."""
+        return {link.id: link for link in self.list_links()}
+
+    def get_link_status(self, link: LinkItem) -> dict[str, str]:
+        """リンク状態を取得."""
+        source = self._resolve_path(link.source)
+        target = self._resolve_path(self._get_target_str(link))
+
+        if not source.exists():
+            status = LinkStatus.MISSING_SOURCE
+        elif target.is_symlink():
+            link_target = target.resolve()
+            if link_target == source and link_target.exists():
+                status = LinkStatus.LINKED
+            elif not link_target.exists():
+                status = LinkStatus.BROKEN_LINK
+            else:
+                status = LinkStatus.WRONG_LINK
+        elif target.exists():
+            status = LinkStatus.EXISTING_FILE
+        else:
+            status = LinkStatus.MISSING_TARGET
+
+        return {
+            "id": link.id,
+            "name": link.name,
+            "source": str(source),
+            "target": str(target),
+            "status": status.value,
+        }
+
+    def show_status_table(self) -> list[dict[str, str]]:
+        """リンク状態を表形式で表示."""
+        rows = [self.get_link_status(link) for link in self.list_links()]
+
+        table = Table(title="リンク状態")
+        table.add_column("ID")
+        table.add_column("名前")
+        table.add_column("状態")
+        table.add_column("ターゲット")
+
+        for row in rows:
+            table.add_row(row["id"], row["name"], row["status"], row["target"])
+
+        self.console.print(table)
+        return rows
+
+    def repair_links(self, dry_run: bool = False) -> None:
+        """壊れたリンクの修復を試行."""
+        for link in self.list_links():
+            status = self.get_link_status(link)["status"]
+            if status in {LinkStatus.LINKED.value}:
+                continue
+
+            source = self._resolve_path(link.source)
+            target = self._resolve_path(self._get_target_str(link))
+
+            if not source.exists():
+                continue
+
+            if target.exists() or target.is_symlink():
+                action = self._handle_existing_target(target, source, dry_run=dry_run)
+                if action == "skip":
+                    continue
+
+            if dry_run:
+                self.console.print(f"[yellow]🧪 修復リンク作成予定: {target} → {source}[/yellow]")
+            else:
+                self._create_link(source, target)
+                self.console.print(f"[green]✅ 修復リンク作成: {target} → {source}[/green]")
+
+    def unlink_links(self, link_ids: list[str], dry_run: bool = False) -> dict[str, list[str]]:
+        """指定リンクを解除."""
+        results: dict[str, list[str]] = {"removed": [], "skipped": [], "errors": []}
+        link_map = self.get_link_map()
+
+        for link_id in link_ids:
+            link = link_map.get(link_id)
+            if link is None:
+                results["errors"].append(link_id)
+                continue
+
+            target = self._resolve_path(self._get_target_str(link))
+            if not target.exists() and not target.is_symlink():
+                results["skipped"].append(link_id)
+                continue
+
+            if target.is_symlink():
+                if dry_run:
+                    self.console.print(f"[yellow]🧪 解除予定: {target}[/yellow]")
+                else:
+                    target.unlink()
+                results["removed"].append(link_id)
+                continue
+
+            if not Confirm.ask(f"通常ファイルです。削除しますか? ({target})", default=False):
+                results["skipped"].append(link_id)
+                continue
+
+            if dry_run:
+                self.console.print(f"[yellow]🧪 削除予定: {target}[/yellow]")
+            else:
+                if target.is_dir():
+                    shutil.rmtree(target)
+                else:
+                    target.unlink()
+            results["removed"].append(link_id)
+
+        return results
+
     def _process_link(self, link: LinkItem, dry_run: bool = False) -> str:
         """個別リンクを処理.
 
@@ -105,7 +281,7 @@ class LinkSetup:
             str: 実行したアクション（created, linked, skipped）
         """
         source = self._resolve_path(link.source)
-        target = self._resolve_path(link.target)
+        target = self._resolve_path(self._get_target_str(link))
 
         self._show_link_status(link, source, target)
 
@@ -130,6 +306,65 @@ class LinkSetup:
             action = self._handle_existing_target(target, source, dry_run=dry_run)
             if action == "skip":
                 return "skipped"
+
+        if dry_run:
+            self.console.print(f"[yellow]🧪 リンク作成予定: {target} → {source}[/yellow]")
+        else:
+            self._create_link(source, target)
+            self.console.print(f"[green]✅ リンク作成: {target} → {source}[/green]")
+
+        return "linked"
+
+    def _process_link_non_interactive(
+        self,
+        link: LinkItem,
+        conflict_strategy: str = "backup",
+        dry_run: bool = False,
+    ) -> str:
+        """個別リンクを非対話で処理.
+
+        Args:
+            link: リンクアイテム
+            conflict_strategy: 競合時の処理（backup/overwrite/skip）
+            dry_run: 変更は行わず、実行内容のみ表示
+
+        Returns:
+            str: 実行したアクション（created, linked, skipped）
+        """
+        source = self._resolve_path(link.source)
+        target = self._resolve_path(self._get_target_str(link))
+
+        if not source.exists():
+            if link.create_if_missing:
+                if dry_run:
+                    self.console.print(f"[yellow]🧪 作成予定: {source}[/yellow]")
+                else:
+                    self._create_default_file(source, link)
+                    self.console.print(f"[green]📝 作成: {source}[/green]")
+            else:
+                self.console.print(f"[yellow]⚠️ ソースが存在しません: {source}[/yellow]")
+                return "skipped"
+
+        if target.exists() or target.is_symlink():
+            if target.is_symlink() and target.resolve() == source.resolve():
+                self.console.print(f"[green]✅ 既にリンク済み: {target}[/green]")
+                return "skipped"
+
+            if conflict_strategy == "skip":
+                self.console.print(f"[yellow]⏭️ スキップ(競合): {target}[/yellow]")
+                return "skipped"
+
+            if conflict_strategy == "backup" and not dry_run:
+                self._backup_existing(target)
+
+            if dry_run:
+                prefix = "バックアップ後に" if conflict_strategy == "backup" else ""
+                self.console.print(f"[yellow]🧪 {prefix}削除予定: {target}[/yellow]")
+            else:
+                if target.is_dir() and not target.is_symlink():
+                    shutil.rmtree(target)
+                else:
+                    target.unlink()
 
         if dry_run:
             self.console.print(f"[yellow]🧪 リンク作成予定: {target} → {source}[/yellow]")
@@ -241,15 +476,25 @@ class LinkSetup:
 
         self.console.print(f"[blue]💾 バックアップ: {backup_path}[/blue]")
 
+    def _get_target_str(self, link: "LinkItem") -> str:  # type: ignore[name-defined]
+        """プラットフォームに応じたターゲットパス文字列を返す."""
+        current_platform = _detect_platform()
+        if current_platform == "windows" and link.target_windows:
+            return link.target_windows
+        return link.target
+
     def _resolve_path(self, path_str: str) -> Path:
-        """パス文字列を解決."""
+        """パス文字列を解決（~および%USERPROFILE%を展開）."""
         if path_str.startswith("~"):
             expanded = Path(str(Path.home()) + path_str[1:])
+        elif "%USERPROFILE%" in path_str:
+            userprofile = os.environ.get("USERPROFILE", str(Path.home()))
+            expanded = Path(path_str.replace("%USERPROFILE%", userprofile))
         else:
             expanded = Path(path_str)
         if expanded.is_absolute():
-            return expanded.resolve()
-        return (self.project_root / expanded).resolve()
+            return expanded.absolute()
+        return (self.project_root / expanded).absolute()
 
     def _show_summary(self, results: dict[str, list[Any]]) -> None:
         """セットアップ結果のサマリーを表示."""
