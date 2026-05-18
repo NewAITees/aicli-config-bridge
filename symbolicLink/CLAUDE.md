@@ -1,1 +1,0 @@
-/home/perso/CLAUDE.md

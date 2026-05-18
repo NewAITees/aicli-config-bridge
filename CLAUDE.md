@@ -208,3 +208,128 @@ unfixable = ["F401", "F841"]
 ```
 
 このテンプレートを使用することで、日本語プロジェクトでのruffエラーを予防できます。
+
+### Any封じ込めルール（境界限定）
+
+6. **`Any` の利用範囲を境界に限定する**
+   `json.loads`、`**kwargs`、スタブ未整備ライブラリなど、外部との境界でのみ `Any` を許容する。
+7. **境界直後に型へ変換する**
+   `isinstance` / `cast` / Pydantic `model_validate` を使って、`dict[str, object]` や明示モデルに即時変換する。
+8. **内部ロジックに `Any` を持ち込まない**
+   services / orchestrator / repository の業務ロジック層では `Any` のまま受け渡ししない。
+9. **境界処理を関数へ局所化する**
+   `parse_*` / `from_external_*` などの関数に集約し、`Any` の扱いを1箇所で完結させる。
+
+---
+
+### データ中心主義と型設計の原則
+
+設計の前提として**データ中心主義**を取り入れる。
+処理の流れより「どんなデータが存在するか」を先に定義し、型はそのデータの契約として機能させる。
+
+#### 型を作るべき境界
+
+| 境界 | 理由 |
+|---|---|
+| 外部入力 | バリデーションが必要 |
+| ドメインの核 | ビジネスロジックの中心 |
+| 外部出力 | 下流との契約 |
+
+内部の計算途中（中間処理）は `dict` / `tuple` / `dataclass` で十分なことが多い。
+
+#### 変換回数を減らす設計
+
+```python
+# 悪い例：変換が多すぎる
+RawText → TokenizedText → NormalizedText → ScoredText → RankedText
+
+# 良い例：意味のある境界だけ型にする
+RawInput → DocumentChunk → AnalysisResult
+          (内部処理はまとめて一関数)
+```
+
+パイプラインの「入口・出口・分岐点」だけ型を作る。関数1本の中の処理は型なしでよい。
+
+#### 型の安定性ルール
+
+- 一度作った型のフィールドを後から変えない（下流が全部壊れる）
+- 複数の関数が同じ型を受け取る場合は特に慎重に変更する
+- 型を変えるときは新しい型名を作って移行する（古い型を壊さない）
+
+```python
+# 型を変えたいとき
+class AnalysisResultV2(BaseModel):  # V1を壊さず並存させる
+    ...
+```
+
+#### 型の数のサイン
+
+型の数 ≒ 関数の数 になってきたら「型を作りすぎ」のサイン。
+型はコントラクト（契約）であり、多すぎると変更コストが上がる。
+
+---
+
+## .claudeignore の作成ルール
+
+プロジェクト作成時に必ず `.claudeignore` を配置し、Claude Code の自動スキャンによる不要なトークン消費を防ぐこと。
+
+### 標準テンプレート
+
+```
+# 依存関係
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.eggs/
+*.egg-info/
+dist/
+build/
+
+# ビルド成果物
+*.o
+*.so
+*.dll
+*.class
+target/
+out/
+.next/
+.nuxt/
+
+# ログ・一時ファイル
+*.log
+logs/
+tmp/
+temp/
+.tmp/
+*.bak
+*.swp
+*.DS_Store
+
+# テストカバレッジ
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# 環境・秘密情報
+.env
+.env.*
+*.pem
+*.key
+
+# IDE・エディタ
+.idea/
+.vscode/
+*.iml
+```
+
+### 運用ルール
+
+- 新規プロジェクト作成時に `.claudeignore` を必ず作成する
+- `node_modules/`、`.venv/`、ビルド成果物、ログは必ず除外する
+- プロジェクト固有の不要ディレクトリは追記して管理する
+- `.gitignore` と重複してよい（目的が異なる：Gitはバージョン管理、claudeignoreはスキャン除外）
