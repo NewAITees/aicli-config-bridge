@@ -128,6 +128,9 @@ class LinkSetup:
             conflict_strategy: 競合時の処理（backup/overwrite/skip）
             dry_run: 変更は行わず、実行内容のみ表示
         """
+        if conflict_strategy not in {"backup", "overwrite", "skip"}:
+            raise ValueError("競合戦略は backup / overwrite / skip のいずれかです")
+
         config = self.load_config()
         links = config.links
 
@@ -249,6 +252,13 @@ class LinkSetup:
                 continue
 
             if target.is_symlink():
+                source = self._resolve_path(link.source)
+                if target.resolve() != source.resolve():
+                    self.console.print(
+                        f"[yellow]⏭️ 管理対象外のリンクのため解除をスキップ: {target}[/yellow]"
+                    )
+                    results["skipped"].append(link_id)
+                    continue
                 if dry_run:
                     self.console.print(f"[yellow]🧪 解除予定: {target}[/yellow]")
                 else:

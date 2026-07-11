@@ -77,9 +77,17 @@ def apply(
     ),
 ) -> None:
     """設計図通りにリンクを非対話で適用（AI向け）."""
+    if on_conflict not in {"backup", "overwrite", "skip"}:
+        raise typer.BadParameter(
+            "backup / overwrite / skip のいずれかを指定してください",
+            param_hint="--on-conflict",
+        )
+
     try:
         setup_manager = LinkSetup(project_root)
-        setup_manager.apply_links(ids=ids, conflict_strategy=on_conflict, dry_run=dry_run)
+        results = setup_manager.apply_links(ids=ids, conflict_strategy=on_conflict, dry_run=dry_run)
+        if results["errors"]:
+            raise typer.Exit(1)
     except FileNotFoundError as exc:
         console.print(f"[red]❌ {exc}[/red]")
         raise typer.Exit(1) from exc
@@ -105,9 +113,11 @@ def status(
     """リンク状態を表示."""
     try:
         setup_manager = LinkSetup(project_root)
-        results = setup_manager.show_status_table()
         if json_output:
+            results = [setup_manager.get_link_status(link) for link in setup_manager.list_links()]
             console.print_json(json.dumps(results, ensure_ascii=False))
+        else:
+            setup_manager.show_status_table()
     except FileNotFoundError as exc:
         console.print(f"[red]❌ {exc}[/red]")
         raise typer.Exit(1) from exc

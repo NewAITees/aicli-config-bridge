@@ -269,3 +269,26 @@ def test_unlink_links_removes_symlink(temp_project: Path) -> None:
 
     assert "test-file" in result["removed"]
     assert not target.exists()
+
+
+def test_unlink_links_does_not_remove_wrong_symlink(temp_project: Path) -> None:
+    """管理対象外のシンボリックリンクを削除しない."""
+    setup = LinkSetup(temp_project)
+    target = Path.home() / "target.txt"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    unrelated = temp_project / "unrelated.txt"
+    unrelated.write_text("keep", encoding="utf-8")
+    target.symlink_to(unrelated)
+
+    result = setup.unlink_links(["test-file"], dry_run=False)
+
+    assert "test-file" in result["skipped"]
+    assert target.is_symlink()
+
+
+def test_apply_links_rejects_unknown_conflict_strategy(temp_project: Path) -> None:
+    """不明な競合戦略を受け付けない."""
+    setup = LinkSetup(temp_project)
+
+    with pytest.raises(ValueError, match="競合戦略"):
+        setup.apply_links(conflict_strategy="unknown")
