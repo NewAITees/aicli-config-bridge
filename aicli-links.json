@@ -10,14 +10,6 @@
       "target": "~/.claude/CLAUDE.md",
       "target_windows": "%USERPROFILE%\\.claude\\CLAUDE.md",
       "create_if_missing": false
-    },
-    {
-      "id": "gemini-md",
-      "name": "Gemini プロジェクトコンテキスト",
-      "type": "file",
-      "source": "project-configs/GEMINI.md",
-      "target": "~/.gemini/settings.json",
-      "create_if_missing": false
     }
   ]
 }

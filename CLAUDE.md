@@ -4,7 +4,7 @@
 
 ## プロジェクト概要
 
-`aicli-config-bridge` は、シンボリックリンクを通じて AI CLI ツールの設定を管理する Python CLI ツールです。Claude Code や Gemini CLI などのツール用の集中設定管理を提供し、設定をバージョン管理し、開発環境間で共有できます。
+`aicli-config-bridge` は、シンボリックリンクを通じて AI CLI ツールの設定を管理する Python CLI ツールです。リンク設計図（`aicli-links.json`）に基づいて、プロジェクト内の設定ファイルをシステム上の配置場所（`~/.claude/` など）へリンクします。設定をバージョン管理し、開発環境間で共有できます。
 
 ## 開発環境セットアップ
 
@@ -59,59 +59,46 @@ aicli-config-bridge/
 │   └── devcontainer.json
 ├── src/
 │   └── aicli_config_bridge/
-│       ├── cli.py              # メインCLIインターフェース（Typer使用）
-│       ├── config/             # 設定管理
-│       │   ├── manager.py      # 設定マネージャー
-│       │   └── models.py       # Pydanticモデル
-│       ├── linker/             # シンボリックリンク管理
-│       │   └── manager.py      # リンクマネージャー
-│       ├── tools/              # ツール固有ハンドラー
-│       │   ├── claude_code.py  # Claude Code統合
-│       │   ├── gemini_cli.py   # Gemini CLI統合
-│       │   ├── markdown_handler.py # コンテキストファイル管理
-│       │   └── mcp_handler.py  # MCP設定処理
-│       └── utils/              # ユーティリティ
-│           └── platform.py     # プラットフォーム検出（WSL対応）
+│       ├── cli.py              # CLIインターフェース（Typer使用）
+│       └── setup/              # リンクセットアップ
+│           ├── manager.py      # LinkSetup（リンク作成・状態判定・修復・解除）
+│           └── models.py       # Pydanticモデル（LinkItem, LinksConfig, LinkStatus）
 ├── tests/                      # テストスイート
-├── project-configs/            # プロジェクト設定ファイル
-├── pyproject.toml             # プロジェクト設定
-└── README.md                  # プロジェクトドキュメント
+├── project-configs/            # リンク元となるプロジェクト管理の設定ファイル
+├── symbolicLink/               # ホームディレクトリ実体への参照用シンボリックリンク集
+├── aicli-links.json            # リンク設計図（リポジトリルートに配置）
+├── docs/                       # セットアップガイド・要件定義・スキル共通仕様
+├── pyproject.toml              # プロジェクト設定
+└── README.md                   # プロジェクトドキュメント
 ```
 
 ## 主要アーキテクチャコンポーネント
 
 ### CLIインターフェース（cli.py）
 - Typerを使用したコマンドラインインターフェース
-- メインコマンド: init, detect-configs, import-config, link, link-all, unlink, status, validate
-- ユーザーファイル管理: link-user, unlink-user, status-user
-- コンテキスト管理: import-context, link-context, create-context
+- コマンド: `setup`（対話的セットアップ）, `apply`（非対話適用、AI向け）, `status`（状態表示、`--json` 対応）, `init`（設計図の新規作成）
+- 引数なし起動で対話メニュー（setup / status / unlink / exit）を表示
 
-### 設定管理（config/）
-- JSON設定ファイルの読み書き
-- 環境変数の置換（`${VAR_NAME}` 形式）
-- Pydantic を使用した設定の検証
+### リンクセットアップ（setup/）
+- `aicli-links.json`（リンク設計図）を Pydantic モデル（`LinksConfig` / `LinkItem`）で読み込み・検証
+- リンク状態判定: `linked` / `missing_target` / `broken_link` / `wrong_link` / `existing_file` / `missing_source`
+- 既存ターゲットの競合処理: backup / overwrite / skip（バックアップ先はターゲット親ディレクトリの `.aicli-backup/`）
+- 壊れたリンクの修復（repair）とリンク解除（unlink）
+- プラットフォーム検出（windows / wsl / darwin / linux）と `target_windows` によるWindows用パス指定
+- パス解決: `~` および `%USERPROFILE%` を展開
 
-### シンボリックリンク管理（linker/）
-- プラットフォーム間のシンボリックリンク作成と管理
-- リンク前の既存設定のバックアップ
-- リンクの整合性とステータス検証
+## リンク設計図（aicli-links.json）
 
-### ツール統合（tools/）
-- Claude Code と Gemini CLI 用のハンドラー
-- コンテキストファイル（CLAUDE.md, GEMINI.md）管理
-- MCP サーバー設定処理
+各リンクは以下のフィールドを持つ:
 
-## サポートされているAI CLIツール
-
-### Claude Code
-- 設定ファイル: `~/.claude/settings.json`
-- プロジェクト設定: `.claude/settings.json`
-- コンテキストファイル: `CLAUDE.md`
-
-### Gemini CLI
-- ユーザー設定: `~/.gemini/settings.json`
-- プロジェクト設定: `.gemini/settings.json`
-- コンテキストファイル: `GEMINI.md`
+- `id`: 一意識別子
+- `name`: 人間が読める説明
+- `type`: `file` / `directory`
+- `source`: プロジェクト内のソースパス（相対パス）
+- `target`: リンク先パス（`~` 使用可、Linux/Mac/WSL共通）
+- `target_windows`: Windowsネイティブ用パス（省略可、`%USERPROFILE%` 使用可）
+- `create_if_missing`: ソースがない場合に作成するか
+- `default_content`: 作成時のデフォルト内容
 
 ## 開発ガイドライン
 
@@ -150,25 +137,23 @@ ignore = [
 ### 実装状況
 
 #### 完了済み機能 ✅
-- Typerを使用したCLIインターフェース
-- 設定の検出とインポート
-- 基本的なシンボリックリンク管理
-- Claude Code と Gemini CLI のハンドラー
-- コンテキストファイル管理
-- ユーザーファイルのシンボリックリンク管理
-- 環境変数の置換
-- 基本テストスイート（14テストが通過）
+- Typerを使用したCLIインターフェース（setup / apply / status / init / 対話メニュー）
+- リンク設計図（aicli-links.json）に基づくシンボリックリンク作成
+- リンク状態判定・修復・解除
+- 既存ファイルのバックアップ（`.aicli-backup/`）
+- dry-run 対応
 - WSL対応のプラットフォーム検出
 - Dev Container設定
 
-#### 既知の問題 ❌
-- 低いテストカバレッジ（20%、CLIインターフェースはテストなし）
-- プロファイル機能は未実装
-- Windows完全対応は未実装
+#### 未実装 ❌
+- Windowsネイティブでのコピー運用（`_create_link` は常にシンボリックリンクを作成）
+- ツール間設定同期コマンド（`sync`、要件定義は `docs/REQUIREMENTS_SYNC.md`）
+- CLIインターフェースのテスト（テストは setup/manager.py が中心）
 
-#### 解決済み問題 ✅
-- ~~mypyタイプエラーが25個あり（主にモデルの不整合）~~
-- ~~ruffリンティングエラーが91個あり（コメントの全角文字、行長など）~~ → ruff設定で解決
+### ドキュメント同期ルール
+
+- ドキュメント（本ファイル・README）は実装に従属する。実装を変えたら同じ変更内でドキュメントを更新すること
+- 実装されていない機能をドキュメントに「ある」と書かないこと。将来計画は `docs/REQUIREMENTS_SYNC.md` のような要件定義ファイルに分離すること
 
 ### 開発時の注意事項
 - 日本語ドキュメントを使用する場合は、上記ruff設定ガイドラインに従う

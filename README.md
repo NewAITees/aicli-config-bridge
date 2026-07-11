@@ -4,28 +4,23 @@ A streamlined configuration management tool for AI CLI applications, enabling ce
 
 ## Overview
 
-`aicli-config-bridge` addresses the common challenge of managing AI CLI tool configurations that are typically scattered across system-specific locations. This tool allows developers to maintain all AI CLI configurations within a single project directory, making them easily portable, version-controllable, and shareable across development environments. Current releases focus on symlink-based management for macOS/Linux/WSL, with Windows native support handled as file copy when symlinks are unavailable.
+`aicli-config-bridge` addresses the common challenge of managing AI CLI tool configurations that are typically scattered across system-specific locations. This tool allows developers to maintain all AI CLI configurations within a single project directory, making them easily portable, version-controllable, and shareable across development environments. Current releases focus on symlink-based management for macOS/Linux/WSL. Windows native paths can be declared per link (`target_windows`), but link creation still requires symlink support (copy-based sync is not implemented).
 
 ## Features
 
 - **Centralized Configuration Management**: Manage all AI CLI tool configurations from a single project directory
-- **Symbolic Link Automation**: Automatically creates and manages symbolic links between project configurations and system locations (or file copy on Windows native)
-- **Cross-Platform Compatibility**: Works on macOS, Linux, and Windows (WSL); Windows native uses copy in place of symlink
-- **Backup and Restore**: Safely backup existing configurations before linking
-- **Validation**: Verify configuration integrity and link status
-- **Context File Management**: Import and link `CLAUDE.md` / `GEMINI.md` context files
+- **Link Blueprint**: Declare all links in `aicli-links.json` and apply them interactively (`setup`) or non-interactively (`apply`)
+- **Cross-Platform Paths**: Works on macOS, Linux, and Windows (WSL); per-link `target_windows` paths for Windows
+- **Backup**: Existing target files are backed up to `.aicli-backup/` before linking
+- **Status & Repair**: Verify link status (`status --json` for scripts) and repair broken links
 
-## Supported AI CLI Tools
+## How It Works
 
-### Claude Code
-- **Configuration Location**: `~/.claude/settings.json`, `~/.claude/settings.local.json`
-- **Project Settings**: `configs/claude-code/settings.json`, `configs/claude-code/settings.local.json`
-- **MCP Servers**: Model Context Protocol server configurations
-
-### Gemini CLI
-- **User Settings**: `~/.gemini/settings.json`
-- **Project Settings**: `configs/gemini-cli/settings.json`
-- **Context Files**: `GEMINI.md` project context files
+Links are declared in a blueprint file `aicli-links.json` at the project root.
+Each entry maps a project-managed source file (e.g. `project-configs/.claude/CLAUDE.md`)
+to a system location (e.g. `~/.claude/CLAUDE.md`). The CLI creates and verifies
+symbolic links according to this blueprint. Any AI CLI tool whose configuration
+lives in files (Claude Code, Gemini CLI, Codex, ...) can be managed this way.
 
 ## Installation
 
@@ -76,59 +71,32 @@ cd my-ai-configs
 
 ```
 my-ai-configs/
-├── aicli-links.json
-├── configs/
-│   ├── claude-code/
-│   │   ├── settings.json
-│   │   └── settings.local.json
-│   ├── gemini-cli/
-│   │   └── settings.json
-├── backups/
-├── aicli-config.json
-├── CLAUDE.md
-└── GEMINI.md
+├── aicli-links.json            # Link blueprint
+└── project-configs/            # Project-managed source files
+    └── .claude/
+        └── CLAUDE.md
 ```
 
-## Configuration Examples
+Backups of pre-existing target files are stored next to each target in an
+`.aicli-backup/` directory.
 
-### Claude Code Configuration
+## Link Blueprint Example (aicli-links.json)
 
 ```json
 {
-  "mcpServers": {
-    "filesystem": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/project"],
-      "env": {}
-    },
-    "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
-      }
+  "version": "0.2.0",
+  "description": "AI CLI configuration links",
+  "links": [
+    {
+      "id": "claude-global-md",
+      "name": "Claude global context (CLAUDE.md)",
+      "type": "file",
+      "source": "project-configs/.claude/CLAUDE.md",
+      "target": "~/.claude/CLAUDE.md",
+      "target_windows": "%USERPROFILE%\\.claude\\CLAUDE.md",
+      "create_if_missing": false
     }
-  },
-  "allowedTools": ["read", "write", "shell"],
-  "theme": "dark"
-}
-```
-
-### Gemini CLI Configuration
-
-```json
-{
-  "theme": "Atom One",
-  "autoAccept": false,
-  "checkpointing": {
-    "enabled": true
-  },
-  "mcpServers": {
-    "sequential-thinking": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
-    }
-  }
+  ]
 }
 ```
 
@@ -139,7 +107,16 @@ my-ai-configs/
 aicli-config-bridge init [project-name]
 
 # Run interactive setup based on aicli-links.json
-aicli-config-bridge setup
+aicli-config-bridge setup [--dry-run]
+
+# Apply links non-interactively (AI/script friendly)
+aicli-config-bridge apply [--dry-run] [--on-conflict backup|overwrite|skip] [--id <link-id>]
+
+# Show link status (add --json for machine-readable output)
+aicli-config-bridge status [--json]
+
+# Run without a subcommand for an interactive menu (setup / status / unlink)
+aicli-config-bridge
 ```
 
 ## Security Considerations
