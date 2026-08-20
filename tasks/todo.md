@@ -15,6 +15,15 @@
 
 ## 現在のタスク
 
+- [x] RTK: Windows Codex用NodeアダプターとcommandWindowsを追加
+- [x] RTK: Windows Claude・Codex両方のHook配置を検証
+- [x] RTK: Windows/WSL共通仕様とテストを更新
+- [x] RTK: Linux版0.42.4をCodex・WSL ClaudeのPreToolUse Hookへ統合
+- [x] RTK: Hook設定をaicli-config-bridgeの管理対象へ追加
+- [x] RTK: 変換・二重適用・復旧経路を検証
+- [x] alignment: Project Treeを中心とする共有構造の作成・保守規則をAGENTS.mdへ追加
+- [x] alignment: 日本語 / English併記の視覚的な基本形式へtasks/alignment.mdを更新
+- [x] alignment: lessonsとの責務分離とシンボリックリンク探索の学びを記録
 - [x] tasks/ ディレクトリ作成
 - [x] spec: spec スキルを Spec中心開発向けに再定義
 - [x] spec: codex / claude 実体反映用の差分案を整理
@@ -36,5 +45,5 @@
 - [ ] CLI テストを追加して `src/aicli_config_bridge/cli.py` の主要コマンドを検証する
 - [ ] `pyproject.toml` の依存バージョン指定を運用規約と整合させるか判断する（現状は `>=` 指定）
 - [ ] `python --version` が壊れている原因を切り分け、開発環境前提を README かセットアップ手順に反映する
-- [ ] `RTK.md` 参照の実体場所を確認し、参照切れなら運用文書側を修正する
+- [x] `RTK.md` 参照の実体場所を確認し、参照切れをHook中心の共通仕様へ移行する
 - [ ] `.gitignore` と生成物管理を確認し、`__pycache__` などの不要物が作業対象に混ざらないようにする

@@ -40,7 +40,7 @@ AIは全てのチャットの冒頭に、この5原則を逐語的に必ず画�
 
 ```bash
 mkdir -p tasks
-touch tasks/todo.md tasks/lessons.md
+touch tasks/todo.md tasks/lessons.md tasks/alignment.md
 ```
 
 作成後、それぞれのファイルに後述の基本形式を書き込んでから作業を開始すること。
@@ -51,6 +51,7 @@ touch tasks/todo.md tasks/lessons.md
 
 - `tasks/todo.md` - 未着手タスクと進捗
 - `tasks/lessons.md` - 過去の失敗と学び
+- `tasks/alignment.md` - プロジェクト構造・実装対応・用語の共有地図
 
 変更があった場合は更新すること。
 
@@ -100,18 +101,129 @@ touch tasks/todo.md tasks/lessons.md
 ### [サブカテゴリ: タイトル]
 ```
 
+`tasks/alignment.md` には以下を書くこと。これは `tasks/lessons.md` とは別軸で管理する。
+
+- `alignment.md`: 現在のプロジェクト構造、対象の指し方、概念と実装の対応、現在有効な共有認識
+- `lessons.md`: 過去に起きた失敗、その原因、再発防止策
+
+`alignment.md` の中心は単なる用語集ではなく、人間とAIが同じ対象を指せるようにする **Project Tree（プロジェクト構造図）** とする。
+
+````markdown
+# Alignment - 共有構造と意味の対応 / Shared Structure and Semantics
+
+このファイルは、人間とAIが作っているものの構造を同じ視点で捉え、
+要望が「何の、どの側面を、どう変えたいのか」を特定するための共有地図である。
+
+---
+
+## 全体地図 / Project Overview
+
+```text
+プロジェクト / Project
+├─ 画面・操作 / Frontend
+├─ 処理・データ / Backend
+└─ 実行環境 / Infrastructure
+```
+
+## 領域地図 / Domain Maps
+
+### 画面・操作 / Frontend
+
+```mermaid
+flowchart LR
+    FE["画面・操作<br/>Frontend"]
+```
+
+### 処理・データ / Backend
+
+### 実行環境 / Infrastructure
+
+## 構造と実装の対応 / Structure-to-Implementation Mapping
+
+### [日本語名 / English Name]
+- **役割 / Responsibility**:
+- **親 / Parent**:
+- **含むもの / Contains**:
+- **画面上の位置・利用者からの見え方 / Human View**:
+- **実装 / Implementation**:
+  - Components:
+  - Files:
+  - State:
+  - API:
+- **指示に使える表現 / Human Labels**:
+- **曖昧になりやすい表現 / Ambiguous Labels**:
+
+## 用語・概念 / Terms and Concepts
+
+### [日本語 / English]
+- **意味 / Meaning**:
+- **別名 / Aliases**:
+- **NG解釈 / Wrong Interpretation**:
+- **OK解釈 / Correct Interpretation**:
+
+---
+
+## 意味の衝突記録 / Semantic Conflict Log
+
+### YYYY-MM-DD「[ユーザーの言葉]」
+- **対象候補 / Candidate Target**:
+- **ユーザーの意図 / User Meaning**:
+- **AIの解釈 / Agent Interpretation**:
+- **実装上の実体 / Actual Implementation**:
+- **現在の解釈規則 / Current Rule**:
+- **状態 / Status**: unresolved / resolved
+
+## 未解決の観察 / Unresolved Observations
+
+### YYYY-MM-DD「[まだ分類できない要望・違和感]」
+- **観察 / Observation**:
+- **対象候補 / Possible Targets**:
+- **概念候補 / Possible Concepts**:
+- **確信度 / Confidence**: low / medium / high
+- **次に確認すること / Next Question**:
+````
+
+### Alignmentの作成・保守規則
+
+1. 表示名は原則として `日本語名 / English Name` の順で併記する。
+2. 最初に全体地図を置き、Frontend、Backend、Infrastructureなどの領域へ段階的に降りられる構造にする。
+3. Project Treeはコードのディレクトリ構造ではなく、人間が機能や画面を指せる安定した構造として書く。
+4. ファイル、Component、State、APIなど変化しやすい情報は、Project Treeと分離してImplementation Mappingに記録する。
+5. 人間向けの地図には実装情報を詰め込みすぎず、全体地図 → 領域地図 → 詳細の順に段階表示する。
+6. Mermaidを表示できる環境では領域地図を図示し、表示できない環境でも理解できるテキスト木構造を併記する。
+7. 木のノードは、人間が修正対象として指したくなるもの、独立した役割を持つもの、要望や制約が付くものを中心にする。個々のCSSプロパティや関数まで無制限に展開しない。
+8. 要望を受けたAIは、可能な限り `対象ノード / Target`、`側面 / Aspect`、`期待する変化 / Expected Change` を示して解釈を確認する。
+9. 対象を一意にできない場合、AIは勝手に決定せず、Project Tree上の候補を人間に分かる表現で示す。
+10. 機能の追加・削除・名称変更・責務変更時はProject Treeを更新し、実装ファイルの移動・Component分割・API変更時はImplementation Mappingを更新する。
+11. 人間が使った新しい呼び方はHuman Labelsへ追加し、意味を取り違えた場合はSemantic Conflict Logへ記録する。
+12. まだ何を指すか確定できない要望は、無理に分類せずUnresolved Observationsへ保持する。
+13. Semantic Conflict LogとUnresolved Observationsは、Project TreeとImplementation Mappingを修復・成長させる補助軸として扱う。
+14. 過去の失敗・原因・再発防止策は `lessons.md` に記録し、現在有効な構造や意味を示す `alignment.md` と混在させない。
+
+**更新タイミング：**
+- 機能や責務が変わったとき → Project Treeを更新
+- 実装位置や方式が変わったとき → Implementation Mappingを更新
+- 新しい呼び方が判明したとき → Human LabelsまたはTermsへ追加
+- 認識のずれが発生したとき → Semantic Conflict Logへ追記し、必要なら地図・対応関係も修正
+- まだ分類できない要望が出たとき → Unresolved Observationsへ追記
+- 誤解の原因と再発防止策が得られたとき → `lessons.md`へ記録
+
 ### 作業開始フロー
 
 1. `pwd` で現在地を確認する
 2. 環境確認を実施する
-3. `tasks/todo.md` に作業計画を書く
-4. 作業を具体的なステップに分解する
-5. ユーザーに計画を提示し、y/n確認を取る
-6. yが返るまで実装を開始しない
-7. 承認後に実装を開始する
-8. 計画変更が必要になった場合は再確認を取る
-9. 完了後に `tasks/todo.md` を更新する
-10. 学びを `tasks/lessons.md` に記録する
+3. `tasks/lessons.md` の関連項目を読み、過去の失敗・注意点を把握する
+4. `tasks/alignment.md` のProject Tree、実装対応、用語・概念の定義を確認する
+5. `/spec` を起動してゴールと完了基準を確認する（`tasks/todo.md` に未完了の `spec:` 項目があればそちらを先に片付ける）
+6. `tasks/todo.md` に作業計画を書く
+7. 作業を具体的なステップに分解する
+8. ユーザーに計画を提示し、y/n確認を取る
+9. yが返るまで実装を開始しない
+10. 承認後に実装を開始する
+11. 計画変更が必要になった場合は再確認を取る
+12. 完了後に `tasks/todo.md` を更新する
+13. 学びを `tasks/lessons.md` に記録する
+14. 認識のずれがあれば `tasks/alignment.md` に記録する
 
 ### 現在地確認
 
@@ -450,4 +562,49 @@ jobs:
 
 全ての作業において、これらの原則を厳格に遵守し、ユーザー主導で開発を進めること。
 
-@RTK.md
+---
+
+## Yadorigi（記憶システム）
+
+`c:/analysis2/yadorigi` は、Qdrant + Ollama + FastAPI によるingest/search/metabolize機能を持つ知識代謝システム。
+特定のキャラクター（人格）の記憶基盤として運用している。詳細な使い方は `c:/analysis2/yadorigi/SKILL.md` を参照すること。
+
+### 役割分担
+
+- **人格設定（口調・世界観・一人称）**: yadorigiには入れない。システムプロンプト側で持つ。
+- **記憶（会話・出来事）**: yadorigiに `kind=episodic` として `/ingest` する。記憶の文章はキャラの口調である必要はなく、中立的な事実ログでよい。
+
+### セッション開始時
+
+1. `GET http://<yadorigiのURL>/health` でサーバー生存確認。落ちていれば `uv run python -m inference.server`（yadorigiのディレクトリで）起動を試みる。
+2. 固定の起点クエリで軽く `/search` し、直近の記憶を想起しておく。
+
+### Search（デフォルト動作）
+
+関連記憶があるかどうかは検索してみないとわからないため、「検索すべきか」を毎回重く判断してから実行するのではなく、まず安価に検索してから深掘りするかどうかを判断する。
+
+- 会話の話題が変わった、または新しい固有名詞・課題・決定事項が出てきた時点で、`top_k` を絞った軽量な `/search` をまず行い、`summary` だけで関連ノードの有無を確認する
+- 関連度が高そうなノードがあれば、その `id` で `GET /nodes/{node_id}` を呼び、`metadata`（原文相当）を含む詳細を取得する
+- ヒットしなければ、または `summary` だけで十分なら、深追いしない
+
+### セッション終了時 / 記憶する価値があると判断したとき
+
+- ユーザーから明示的に「これを覚えておいて」と指示された場合は必ずingestする。
+- 指示がなくても、自分の永続メモリ（本ファイル冒頭の記憶システムと同じ判断基準）に照らして
+  「後のセッションで参照する価値がある出来事・発言・決定」だと判断したら、Claudeが自律的にingestする。
+- ingest前に、見出しのない長文（会話ログ等）は意味のまとまりでLLM（Claude自身）が区切ってから、
+  まとまりごとに個別の `/ingest` を呼ぶこと（`segment_document` は文字数・見出しでの機械的分割のみで、意味分割はしない）。
+- Stop hook（`~/.claude/hooks/yadorigi_memory_reminder.sh`）がセッションごとに30分間隔で
+  「記憶すべきことがないか確認して」という`additionalContext`を差し込む。これが来たら、
+  直近のやり取りを振り返り、ingestすべきものがあるか判断すること。何もなければ無視してよい。
+
+### Network Binding
+
+yadorigiサーバーは `SERVER_HOST=0.0.0.0` でbindされていることがある（他PCからのアクセスを想定）。
+認証機構はないため、接続先URLは信頼できるネットワーク内でのみ使うこと。
+
+## RTK（Rust Token Killer）
+
+シェルコマンドは`PreToolUse` Hookによって自動的にRTK経由へ書き換えられる。
+エージェントは通常のコマンドを発行し、手動で`rtk`を付けないこと。
+導入・診断・復旧方法の正本は、`aicli-config-bridge/docs/skills/rtk-common-spec.md`を参照すること。
