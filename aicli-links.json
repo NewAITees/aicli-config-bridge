@@ -12,6 +12,15 @@
       "create_if_missing": false
     },
     {
+      "id": "codex-global-agents",
+      "name": "Codex グローバル指示 (AGENTS.md)",
+      "type": "file",
+      "source": "project-configs/.codex/AGENTS.md",
+      "target": "~/.codex/AGENTS.md",
+      "target_windows": "%USERPROFILE%\\.codex\\AGENTS.md",
+      "create_if_missing": false
+    },
+    {
       "id": "codex-global-hooks",
       "name": "Codex グローバルHook設定 (hooks.json)",
       "type": "file",
