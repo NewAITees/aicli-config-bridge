@@ -10,6 +10,32 @@
       "target": "~/.claude/CLAUDE.md",
       "target_windows": "%USERPROFILE%\\.claude\\CLAUDE.md",
       "create_if_missing": false
+    },
+    {
+      "id": "codex-global-hooks",
+      "name": "Codex グローバルHook設定 (hooks.json)",
+      "type": "file",
+      "source": "project-configs/.codex/hooks.json",
+      "target": "~/.codex/hooks.json",
+      "target_windows": "%USERPROFILE%\\.codex\\hooks.json",
+      "create_if_missing": false
+    },
+    {
+      "id": "codex-rtk-hook-adapter",
+      "name": "Codex RTK Hookアダプター",
+      "type": "file",
+      "source": "project-configs/.codex/hooks/rtk_pre_tool_use.py",
+      "target": "~/.codex/hooks/rtk_pre_tool_use.py",
+      "create_if_missing": false
+    },
+    {
+      "id": "codex-rtk-hook-adapter-windows",
+      "name": "Codex RTK Hookアダプター (Windows)",
+      "type": "file",
+      "source": "project-configs/.codex/hooks/rtk_pre_tool_use.mjs",
+      "target": "~/.codex/hooks/rtk_pre_tool_use.mjs",
+      "target_windows": "%USERPROFILE%\\.codex\\hooks\\rtk_pre_tool_use.mjs",
+      "create_if_missing": false
     }
   ]
 }
