@@ -46,3 +46,10 @@
 - `claude` は hook 駆動が強い
 - `codex` は project trust と機能フラグが強い
 - 同じ意図でも設定の置き場所が違うため、対応表が必要
+
+## WSL / Windows Policy
+
+- Claudeは同一のWindows側設定をWSLから参照するため、`/mnt/c/Users/perso/.claude/` と `C:\Users\perso\.claude\` の対応を併記する。
+- CodexはWSLとWindowsで `config.toml` が分かれるため、各環境のネイティブパスで同じtrust意図を記述する。
+- WindowsからWSLのリポジトリをtrustする場合は `\\wsl.localhost\Ubuntu\...` を使い、WSLからWindows側の作業領域をtrustする場合は `/mnt/c/...` を使う。
+- MCPの実行ファイルやランナーはOS依存のため、同じ設定をコピーせず、環境ごとの実体パスを維持する。

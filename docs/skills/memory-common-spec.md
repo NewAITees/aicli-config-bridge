@@ -16,9 +16,20 @@
 
 利用前に次を満たしていること:
 - `uv` が使える
-- Ollama が起動している
+- Ollama が `http://127.0.0.1:11436` で起動している
 - Qdrant が設定 URL で到達可能
 - 対象リポジトリの依存関係が導入済み
+
+## Runtime Locations
+
+実体の場所は環境に応じて次のように読む。
+
+- Yadorigi (WSL): `/mnt/c/analysis2/yadorigi`
+- Yadorigi (Windows): `C:\analysis2\yadorigi`
+- Yadorigi詳細仕様: `/mnt/c/analysis2/yadorigi/docs/` または `C:\analysis2\yadorigi\docs\`
+- Ollama URL: `http://127.0.0.1:11436`
+- このリポジトリ (WSL): `/home/perso/analysis/aicli-config-bridge`
+- このリポジトリ (Windows): `\\wsl.localhost\Ubuntu\home\perso\analysis\aicli-config-bridge`
 
 ## Shared Workflow
 

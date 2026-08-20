@@ -75,3 +75,10 @@ Process:
 
 - このリポジトリでは共通仕様が正本
 - 実体 `SKILL.md` の更新は、外部パスへの書き込み権限がある環境で別途行う
+
+## Path Audit Status
+
+- `RTK.md`: 旧来の単独参照は廃止。RTKは`PreToolUse` Hookで自動適用し、共通仕様は`docs/skills/rtk-common-spec.md`で管理する。
+- Claude側のreferenceは `/mnt/c/Users/perso/.claude/skills/references/` に実在する。各スキルからWindows/WSL双方の実体パスを明記する。
+- Ollama: `http://127.0.0.1:11436` を使用する。Windows実体は `C:\Users\perso\AppData\Local\Programs\Ollama\ollama.exe`、WSL表記は `/mnt/c/Users/perso/AppData/Local/Programs/Ollama/ollama.exe`。
+- agent-wrapper: Windows実体は `C:\analysis2\play_ground\.venv\Scripts\agent-wrapper.exe`、WSL表記は `/mnt/c/analysis2/play_ground/.venv/Scripts/agent-wrapper.exe`。
