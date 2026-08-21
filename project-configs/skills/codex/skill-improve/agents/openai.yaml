@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Improve"
+  short_description: "Record lessons and tighten the workflow"
+  default_prompt: "Use -improve to record lessons, note mismatches, and improve the workflow after a task."

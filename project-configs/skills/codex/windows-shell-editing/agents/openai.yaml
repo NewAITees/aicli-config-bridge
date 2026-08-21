@@ -1,0 +1,4 @@
+interface:
+  display_name: "Windows Shell Editing"
+  short_description: "Shell-first Windows file editing"
+  default_prompt: "Use shell_command-first editing workflow for Windows sandboxed file changes."

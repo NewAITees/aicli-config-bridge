@@ -1,0 +1,4 @@
+interface:
+  display_name: "Architect"
+  short_description: "Refactor code that is growing or repeating"
+  default_prompt: "Use  when code is getting large, repetitive, or unclear and needs structural cleanup."

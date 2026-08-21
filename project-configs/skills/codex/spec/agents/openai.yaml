@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spec"
+  short_description: "Clarify goals, constraints, and success criteria"
+  default_prompt: "Use  to clarify the goal, scope, constraints, and success criteria before starting a coding task."

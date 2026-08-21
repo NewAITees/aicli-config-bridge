@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feedback Loop"
+  short_description: "Implement and validate in small steps"
+  default_prompt: "Use -loop while implementing or testing changes, keeping the loop tight with small validated steps."

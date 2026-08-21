@@ -94,6 +94,30 @@ flowchart LR
 - **指示に使える表現 / Human Labels**: 設計図、リンク元、管理設定、リンク先、シンボリックリンク
 - **曖昧になりやすい表現 / Ambiguous Labels**: `symbolicLink/` 内の項目は実体ファイルではなく、ホーム側の配置先を指す場合がある
 
+### エージェント指示 / Agent Instructions
+
+- **役割 / Responsibility**: CodexとClaudeが読むグローバル指示をGit管理し、別PCで再配置できるようにする
+- **実装 / Implementation**:
+  - Codex Source: `project-configs/.codex/AGENTS.md`
+  - Claude Source: `project-configs/.claude/CLAUDE.md`
+  - Link Blueprint: `aicli-links.json`
+  - WSL Targets: `~/.codex/AGENTS.md`, `~/.claude/CLAUDE.md`
+  - Windows Targets: `%USERPROFILE%\.codex\AGENTS.md`, `%USERPROFILE%\.claude\CLAUDE.md`
+- **指示に使える表現 / Human Labels**: AGENTS、CLAUDE、グローバル指示、AI運用規約
+- **曖昧になりやすい表現 / Ambiguous Labels**: ホーム側ファイルは正本ではなく、リポジトリ内正本への配置先として扱う
+
+### スキル正本 / Skill Source of Truth
+
+- **役割 / Responsibility**: 自作スキルをGit管理し、Codex・Claudeおよび別PCへ再配置可能にする
+- **実装 / Implementation**:
+  - Shared: `project-configs/skills/shared/`
+  - Codex Variants: `project-configs/skills/codex/`
+  - Claude Variants: `project-configs/skills/claude/`
+  - Manager: `src/aicli_config_bridge/skills.py`
+  - CLI: `aicli-config-bridge skills status|apply|import`
+- **指示に使える表現 / Human Labels**: 共有スキル、スキル正本、スキル配布、スキルimport
+- **曖昧になりやすい表現 / Ambiguous Labels**: 同一PCには即時反映、別PCにはGit同期とapply後に反映される
+
 ### RTK Hook / RTK Hook
 
 - **役割 / Responsibility**: Bashコマンドを実行前にRTK経由へ透過的に書き換え、Agentへ返る出力を圧縮する

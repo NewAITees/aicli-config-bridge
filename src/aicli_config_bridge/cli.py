@@ -11,6 +11,7 @@ from rich.console import Console
 from rich.prompt import Confirm, Prompt
 
 from .setup.manager import LinkSetup
+from .skills import SkillManager
 
 app = typer.Typer(
     name="aicli-config-bridge",
@@ -19,6 +20,52 @@ app = typer.Typer(
 )
 
 console = Console()
+skills_app = typer.Typer(help="共有スキルの登録・配置・状態確認")
+app.add_typer(skills_app, name="skills")
+
+
+@skills_app.command("status")
+def skills_status(
+    project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p"),
+) -> None:
+    """管理対象スキルの配置状態を表示."""
+    rows = SkillManager(project_root).statuses()
+    for row in rows:
+        console.print(f"{row.agent}\t{row.name}\t{row.status}\t{row.target}")
+
+
+@skills_app.command("apply")
+def skills_apply(
+    project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p"),
+    on_conflict: str = typer.Option("skip", "--on-conflict"),
+    dry_run: bool = typer.Option(False, "--dry-run"),
+) -> None:
+    """管理対象スキルをCodex・Claudeへリンク."""
+    try:
+        rows = SkillManager(project_root).apply(conflict=on_conflict, dry_run=dry_run)
+    except (FileExistsError, ValueError) as exc:
+        console.print(f"[red]❌ {exc}[/red]")
+        raise typer.Exit(1) from exc
+    for row in rows:
+        console.print(f"{row.agent}\t{row.name}\t{row.status}")
+
+
+@skills_app.command("import")
+def skills_import(
+    source: Path = typer.Argument(..., exists=True, file_okay=False),
+    project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p"),
+    dry_run: bool = typer.Option(False, "--dry-run"),
+) -> None:
+    """個別プロジェクトのスキルを共有正本へ登録."""
+    manager = SkillManager(project_root)
+    try:
+        destination = manager.import_skill(source, dry_run=dry_run)
+        if not dry_run:
+            manager.apply(conflict="skip")
+    except (FileExistsError, ValueError) as exc:
+        console.print(f"[red]❌ {exc}[/red]")
+        raise typer.Exit(1) from exc
+    console.print(f"[green]✅ {destination}[/green]")
 
 
 @app.command()

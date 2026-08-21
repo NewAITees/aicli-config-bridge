@@ -15,6 +15,14 @@
 
 ## 現在のタスク
 
+- [x] Skills: Codex・Claudeの自作スキルをshared/agent固有へ棚卸し
+- [x] Skills: Git管理内の正本へ既存スキルを保存
+- [x] Skills: status/apply/importと競合停止・バックアップを実装
+- [x] Skills: 個別プロジェクトから登録した新規スキルを両Agentへ配置可能にする
+- [x] Skills: システム・プラグイン・秘密情報を管理対象外として文書化
+- [x] Codex AGENTS: 現行内容をリポジトリ内へ正本化
+- [x] Codex AGENTS: WSL・Windows両配置先をリンク設計図へ追加
+- [x] Codex AGENTS: 既存環境のリンク切替と別PC向け再現経路を検証
 - [x] RTK: Windows Codex用NodeアダプターとcommandWindowsを追加
 - [x] RTK: Windows Claude・Codex両方のHook配置を検証
 - [x] RTK: Windows/WSL共通仕様とテストを更新

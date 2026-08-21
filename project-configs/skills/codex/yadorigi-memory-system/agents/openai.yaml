@@ -1,0 +1,4 @@
+interface:
+  display_name: "Yadorigi Memory"
+  short_description: "Knowledge metabolism workflow"
+  default_prompt: "Use $yadorigi-memory-system to operate the Yadorigi ingest, search, metabolize, and automation workflow."

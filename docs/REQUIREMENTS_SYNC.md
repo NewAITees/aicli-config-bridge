@@ -92,3 +92,11 @@ aicli-config-bridge sync \
 - デフォルト `--mode` の最終決定（現状は `sync` 想定）。
 - 失敗時のログフォーマットと終了コードの統一ルール。
 
+## 実装済みのスキル正本管理
+
+- `skills status`: Codex・Claudeへの配置状態を確認
+- `skills apply`: スキル単位のシンボリックリンクを配置
+- `skills import PATH`: 個別プロジェクトのスキルを共有正本へ登録後、両Agentへ配置
+- 同名で内容が異なる場合は停止し、既存配置の移行には `--on-conflict backup` を明示する
+- `.system`、プラグインキャッシュ、秘密情報、実行履歴は対象外
+- 同一PCでは正本編集が即時反映され、別PCではGit同期後に `skills apply` が必要

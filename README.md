@@ -14,6 +14,21 @@ A streamlined configuration management tool for AI CLI applications, enabling ce
 - **Backup**: Existing target files are backed up to `.aicli-backup/` before linking
 - **Status & Repair**: Verify link status (`status --json` for scripts) and repair broken links
 
+## Portable Skills
+
+Custom skills are stored under `project-configs/skills/` and deployed to Codex and Claude as
+per-skill symbolic links. System skills, plugin caches, secrets, and runtime history are excluded.
+
+```bash
+uv run aicli-config-bridge skills status
+uv run aicli-config-bridge skills apply --on-conflict backup
+uv run aicli-config-bridge skills import /path/to/my-skill
+```
+
+Shared skills live in `project-configs/skills/shared/`. Agent-specific variants live in the
+`codex/` and `claude/` directories. Source edits are immediately visible to linked agents on the
+same machine. Other machines receive changes after Git synchronization and `skills apply`.
+
 ## How It Works
 
 Links are declared in a blueprint file `aicli-links.json` at the project root.

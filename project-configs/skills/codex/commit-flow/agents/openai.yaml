@@ -1,0 +1,4 @@
+interface:
+  display_name: "Commit Flow"
+  short_description: "Review, test, and commit intended changes"
+  default_prompt: "Use -flow to review the diff, validate the change, and prepare a clean commit."
