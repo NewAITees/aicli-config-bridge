@@ -1,0 +1,39 @@
+{
+  "rules": [
+    {
+      "pattern": "probably",
+      "message": "「おそらく」や「probably」のような曖昧な表現は使用禁止です。",
+      "enabled": true
+    },
+    {
+      "pattern": "alternatively",
+      "message": "「alternatively」のような回りくどい表現は使用禁止です。",
+      "enabled": true
+    },
+    {
+      "pattern": "perhaps",
+      "message": "「perhaps」のような曖昧な表現は使用禁止です。",
+      "enabled": true
+    },
+    {
+      "pattern": "might",
+      "message": "「might」のような曖昧な表現は使用禁止です。",
+      "enabled": true
+    },
+    {
+      "pattern": "could be",
+      "message": "「could be」のような曖昧な表現は使用禁止です。",
+      "enabled": true
+    },
+    {
+      "pattern": "I think",
+      "message": "「I think」のような推測表現は使用禁止です。",
+      "enabled": true
+    },
+    {
+      "pattern": "I believe",
+      "message": "「I believe」のような推測表現は使用禁止です。",
+      "enabled": true
+    }
+  ]
+}

@@ -45,6 +45,60 @@
       "target": "~/.codex/hooks/rtk_pre_tool_use.mjs",
       "target_windows": "%USERPROFILE%\\.codex\\hooks\\rtk_pre_tool_use.mjs",
       "create_if_missing": false
+    },
+    {
+      "id": "gemini-global-md",
+      "name": "Gemini グローバル設定 (GEMINI.md)",
+      "type": "file",
+      "source": "project-configs/.gemini/GEMINI.md",
+      "target": "~/GEMINI.md",
+      "target_windows": "%USERPROFILE%\\GEMINI.md",
+      "create_if_missing": false
+    },
+    {
+      "id": "claude-agents-dir",
+      "name": "Claude カスタムサブエージェント定義",
+      "type": "directory",
+      "source": "project-configs/.claude/agents",
+      "target": "~/.claude/agents",
+      "target_windows": "%USERPROFILE%\\.claude\\agents",
+      "create_if_missing": false
+    },
+    {
+      "id": "claude-hook-pre-commands",
+      "name": "Claude Hook: コマンド事前チェック",
+      "type": "file",
+      "source": "project-configs/.claude/hooks/hook_pre_commands.sh",
+      "target": "~/.claude/hooks/hook_pre_commands.sh",
+      "target_windows": "%USERPROFILE%\\.claude\\hooks\\hook_pre_commands.sh",
+      "create_if_missing": false
+    },
+    {
+      "id": "claude-hook-stop-words",
+      "name": "Claude Hook: NGワードチェック",
+      "type": "file",
+      "source": "project-configs/.claude/hooks/hook_stop_words.sh",
+      "target": "~/.claude/hooks/hook_stop_words.sh",
+      "target_windows": "%USERPROFILE%\\.claude\\hooks\\hook_stop_words.sh",
+      "create_if_missing": false
+    },
+    {
+      "id": "claude-hook-rules-dir",
+      "name": "Claude Hookルール定義",
+      "type": "directory",
+      "source": "project-configs/.claude/hooks/rules",
+      "target": "~/.claude/hooks/rules",
+      "target_windows": "%USERPROFILE%\\.claude\\hooks\\rules",
+      "create_if_missing": false
+    },
+    {
+      "id": "claude-statusline-command",
+      "name": "Claude ステータスライン表示スクリプト",
+      "type": "file",
+      "source": "project-configs/.claude/statusline-command.sh",
+      "target": "~/.claude/statusline-command.sh",
+      "target_windows": "%USERPROFILE%\\.claude\\statusline-command.sh",
+      "create_if_missing": false
     }
   ]
 }

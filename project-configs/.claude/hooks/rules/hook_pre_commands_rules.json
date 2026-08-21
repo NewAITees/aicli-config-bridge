@@ -1,0 +1,54 @@
+{
+  "rules": [
+    {
+      "pattern": "curl",
+      "message": "curlコマンドは使用禁止です。",
+      "enabled": true
+    },
+    {
+      "pattern": "wget",
+      "message": "wgetコマンドは使用禁止です。",
+      "enabled": true
+    },
+    {
+      "pattern": "npm uninstall",
+      "message": "npm uninstallコマンドは使用禁止です。",
+      "enabled": true
+    },
+    {
+      "pattern": "npm remove",
+      "message": "npm removeコマンドは使用禁止です。",
+      "enabled": true
+    },
+    {
+      "pattern": "rm -rf",
+      "message": "rm -rfコマンドは危険なため使用禁止です。",
+      "enabled": true
+    },
+    {
+      "pattern": "sudo",
+      "message": "sudoコマンドは使用禁止です。",
+      "enabled": true
+    },
+    {
+      "pattern": "git push",
+      "message": "git pushコマンドは使用禁止です。",
+      "enabled": true
+    },
+    {
+      "pattern": "git commit",
+      "message": "git commitコマンドは使用禁止です。",
+      "enabled": true
+    },
+    {
+      "pattern": "git reset",
+      "message": "git resetコマンドは使用禁止です。",
+      "enabled": true
+    },
+    {
+      "pattern": "git rebase",
+      "message": "git rebaseコマンドは使用禁止です。",
+      "enabled": true
+    }
+  ]
+}
