@@ -66,3 +66,16 @@
 - [x] `project-configs/.claude/CLAUDE.md` の第1原則直下に、ユーザー承認による運用範囲緩和の条項を追記
 - [x] `pytest` / `ruff check` / `mypy` 全通過を確認
 - [ ] 別PC・別プロジェクトで `apply` 後にフックが実際に発火するか実環境で再検証する
+
+## 外部プラグイン導入 + vibe-diff/test-requirements スキル追加(2026-08-31 承認・完了)
+
+- [x] `claude plugin marketplace add` で anthropics/skills・trailofbits/skills・getsentry/plugin-claude を登録
+- [x] 9プラグイン（example-skills, static-analysis, second-opinion, spec-to-code-compliance,
+      audit-context-building, supply-chain-risk-auditor, security-guidance, claude-security, sentry）
+      をこのマシンにインストールし `claude plugin list` で `enabled` を確認
+- [x] `vibe-diff`・`test-requirements` を独自の配布機構ではなく、既存の `project-configs/skills/claude/`
+      + `aicli-config-bridge skills apply` に統合して作成・配布
+- [x] `docs/skills/install-external-plugins.sh` を新規作成（別PCでの外部プラグイン再現用、
+      スキル自体は本ブリッジの既存機構でカバーするため対象外）
+- [ ] `static-analysis` と `security-guidance` の役割分担（重複回避のためどちらをメインにするか）を決める
+- [ ] Sentryプラグインは別途アカウント連携（OAuth等）が必要（未実施）
