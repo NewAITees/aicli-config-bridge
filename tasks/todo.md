@@ -55,3 +55,14 @@
 - [ ] `python --version` が壊れている原因を切り分け、開発環境前提を README かセットアップ手順に反映する
 - [x] `RTK.md` 参照の実体場所を確認し、参照切れをHook中心の共通仕様へ移行する
 - [ ] `.gitignore` と生成物管理を確認し、`__pycache__` などの不要物が作業対象に混ざらないようにする
+
+## ループエンジニアリング: 自律実行ガードレール整備（2026-08-31 承認・完了）
+
+- [x] `hook_pre_commands.sh` のstdin JSON読み取りバグを修正（`$1`実質無効化を解消）
+- [x] `hook_pre_commands_rules.json` を見直し（git commit/push全面禁止等の過剰ルールを削除、真に不可逆な操作のみ`ask`判定に）
+- [x] `hook_test_gate.sh` を新規作成（Stopフックでpytest/npm testを実行、失敗時は完了をブロック）
+- [x] `aicli-links.json` に `claude-hook-test-gate` を追加し `apply` でリンク作成
+- [x] `~/.claude/settings.json` にStopフック配線を追加（事前バックアップ済み）
+- [x] `project-configs/.claude/CLAUDE.md` の第1原則直下に、ユーザー承認による運用範囲緩和の条項を追記
+- [x] `pytest` / `ruff check` / `mypy` 全通過を確認
+- [ ] 別PC・別プロジェクトで `apply` 後にフックが実際に発火するか実環境で再検証する
