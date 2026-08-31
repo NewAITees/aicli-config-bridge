@@ -92,3 +92,10 @@
 - [x] ステップ6(サブエージェント定義)は既存の`planner`/`implementer`/`code-reviewer`等を変更せず、
       新規スキルの追加のみで対応（変更範囲を限定）
 - [ ] 実際のタスクで`codex-implement`スキルを使い、動作を検証する
+- [x] `codex-implement`を自前の`codex exec`直接呼び出しから、既にインストール済みの
+      `codex`プラグインの`/codex:rescue --write`(codex-companionランタイム)経由に修正
+- [x] `project-configs/.claude/CLAUDE.md`（グローバル配布）にスキル・プラグインの発火ルールを追記。
+      特にレビュー系（security-guidance/codex:review/second-opinion/static-analysis/
+      claude-security/supply-chain-risk-auditor/spec-to-code-compliance）の使い分け表を作成し、
+      `security-guidance`と`static-analysis`の役割分担の課題もここで解消
+- [ ] `spec-to-code-compliance`用の`specs/`ディレクトリ運用は未整備（仕様書がある場合のみ使う設計）
