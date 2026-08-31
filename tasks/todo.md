@@ -79,3 +79,16 @@
       スキル自体は本ブリッジの既存機構でカバーするため対象外）
 - [ ] `static-analysis` と `security-guidance` の役割分担（重複回避のためどちらをメインにするか）を決める
 - [ ] Sentryプラグインは別途アカウント連携（OAuth等）が必要（未実施）
+
+## マルチモデル実装委任: codex-implementスキル新規作成(2026-08-31 承認・完了)
+
+- [x] ロードマップのステップ4・5(`claude-code-router`+Ollama+ChatGPT)を性能比較し不採用と判断
+      （既存の`delegate`スキルの方が実装品質・実績で上回るため。詳細はセッション内比較）
+- [x] `delegate`スキル(agent-wrapper)はダッシュボード承認前提で「普段使い」には重いとユーザーが判断
+- [x] 軽量な代替として`codex-implement`スキルを新規作成（`codex exec -s workspace-write`の同期直接呼び出し、
+      ダッシュボードなし）。project-configs/skills/claude/codex-implement/ に配置し`skills apply`で配布
+- [x] Codexの役割は「実装後に変更内容を平易な日本語で説明する説明役」とし、レビューの正当性は
+      Claude自身が`git diff`とテスト再実行で担保する設計にした
+- [x] ステップ6(サブエージェント定義)は既存の`planner`/`implementer`/`code-reviewer`等を変更せず、
+      新規スキルの追加のみで対応（変更範囲を限定）
+- [ ] 実際のタスクで`codex-implement`スキルを使い、動作を検証する
