@@ -1,53 +1,43 @@
 {
   "rules": [
     {
-      "pattern": "curl",
-      "message": "curlコマンドは使用禁止です。",
-      "enabled": true
-    },
-    {
-      "pattern": "wget",
-      "message": "wgetコマンドは使用禁止です。",
-      "enabled": true
-    },
-    {
-      "pattern": "npm uninstall",
-      "message": "npm uninstallコマンドは使用禁止です。",
-      "enabled": true
-    },
-    {
-      "pattern": "npm remove",
-      "message": "npm removeコマンドは使用禁止です。",
-      "enabled": true
-    },
-    {
       "pattern": "rm -rf",
-      "message": "rm -rfコマンドは危険なため使用禁止です。",
+      "message": "rm -rfは不可逆な削除です。対象と復旧手段を確認してから実行してください。",
       "enabled": true
     },
     {
       "pattern": "sudo",
-      "message": "sudoコマンドは使用禁止です。",
+      "message": "sudoによる特権操作です。必要性を確認してください。",
       "enabled": true
     },
     {
-      "pattern": "git push",
-      "message": "git pushコマンドは使用禁止です。",
+      "pattern": "git push[^|;&]*(--force|-f\\b)",
+      "message": "強制pushはリモート履歴を上書きします。上書き対象を確認してから実行してください。",
       "enabled": true
     },
     {
-      "pattern": "git commit",
-      "message": "git commitコマンドは使用禁止です。",
+      "pattern": "git reset --hard",
+      "message": "git reset --hardは未コミットの変更を破棄します。破棄内容を確認してから実行してください。",
       "enabled": true
     },
     {
-      "pattern": "git reset",
-      "message": "git resetコマンドは使用禁止です。",
+      "pattern": "terraform (destroy|apply)",
+      "message": "terraformによるインフラの破棄・適用です。影響範囲を確認してから実行してください。",
       "enabled": true
     },
     {
-      "pattern": "git rebase",
-      "message": "git rebaseコマンドは使用禁止です。",
+      "pattern": "kubectl delete",
+      "message": "kubectlによるリソース削除です。対象と復旧手段を確認してから実行してください。",
+      "enabled": true
+    },
+    {
+      "pattern": "drop table",
+      "message": "DROP TABLEはデータを不可逆に削除します。対象テーブルとバックアップの有無を確認してから実行してください。",
+      "enabled": true
+    },
+    {
+      "pattern": "truncate",
+      "message": "TRUNCATEはデータを不可逆に削除します。対象とバックアップの有無を確認してから実行してください。",
       "enabled": true
     }
   ]

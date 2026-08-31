@@ -1,26 +1,36 @@
 #!/bin/bash
 
-# Pre-command hook for Claude Code
-# This script checks for forbidden commands before execution
+# Pre-command hook for Claude Code (PreToolUse, matcher: Bash)
+# Claude Code passes the tool call as JSON on stdin, not as $1.
+# Destructive/hard-to-reverse commands trigger an "ask" decision instead of
+# a silent allow, so routine work proceeds without confirmation while risky
+# operations still stop for a human.
 
 RULES_FILE="$HOME/.claude/hooks/rules/hook_pre_commands_rules.json"
 
-# Check if rules file exists
-if [ ! -f "$RULES_FILE" ]; then
-    echo "Rules file not found: $RULES_FILE"
+INPUT=$(cat)
+COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
+
+if [ -z "$COMMAND" ] || [ ! -f "$RULES_FILE" ]; then
     exit 0
 fi
 
-# Get the command from arguments
-COMMAND="$1"
-
-# Check for forbidden commands using jq
-jq -r '.rules[] | select(.enabled == true) | .pattern' "$RULES_FILE" | while read -r pattern; do
-    if echo "$COMMAND" | grep -qi "$pattern"; then
-        MESSAGE=$(jq -r ".rules[] | select(.pattern == \"$pattern\") | .message" "$RULES_FILE")
-        echo "❌ Forbidden command detected: $MESSAGE"
-        exit 1
+MATCHED_MESSAGE=""
+while IFS= read -r pattern; do
+    if echo "$COMMAND" | grep -qiE "$pattern"; then
+        MATCHED_MESSAGE=$(jq -r --arg p "$pattern" '.rules[] | select(.pattern == $p) | .message' "$RULES_FILE")
+        break
     fi
-done
+done < <(jq -r '.rules[] | select(.enabled == true) | .pattern' "$RULES_FILE")
+
+if [ -n "$MATCHED_MESSAGE" ]; then
+    jq -n --arg reason "$MATCHED_MESSAGE" '{
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: "ask",
+        permissionDecisionReason: $reason
+      }
+    }'
+fi
 
 exit 0
