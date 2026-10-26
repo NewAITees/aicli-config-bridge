@@ -1,12 +1,12 @@
 {
   "rules": [
     {
-      "pattern": "(^|[;&|(`\"'[:space:]])(/[^[:space:]]*/)?rm[[:space:]]+([^;&|]*[[:space:]])?(-[a-z]*r[a-z]*|--recursive)([[:space:]\\\"']|$)",
+      "pattern": "(^|[^[:alnum:]_.-])rm[[:space:]]+([^;&|]*[[:space:]])?(-[a-z]*r[a-z]*|--recursive)([[:space:]\\\"']|$)",
       "message": "再帰的なrm（rm -rf, rm -fr, rm -r -f, --recursive など）は不可逆な削除です。対象と復旧手段を確認してから実行してください。",
       "enabled": true
     },
     {
-      "pattern": "(^|[;&|(`\"'[:space:]])sudo([[:space:]]|$)",
+      "pattern": "(^|[^[:alnum:]_.-])sudo([^[:alnum:]_.-]|$)",
       "message": "sudoによる特権操作です。必要性を確認してください。",
       "enabled": true
     },
