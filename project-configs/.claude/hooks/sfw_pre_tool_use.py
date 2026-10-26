@@ -41,10 +41,11 @@ GUARDED: dict[str, set[str]] = {
 }
 UV_DIRECT = {"add", "sync", "lock"}
 UV_NESTED = {"pip": {"install", "sync", "compile"}, "tool": {"install"}}
-NON_FETCHING_FIRST = {"run", "test", "exec", "list", "ls", "view", "show", "info", "outdated"}
-SUBCOMMAND_WINDOW = 3
 
 SUBSTITUTION = re.compile(r"\$\(([^()]*)\)|`([^`]*)`")
+SFW_SEGMENT_START = re.compile(
+    r"\s*(\w+=\S*\s+)*(sudo\s+)?(sfw|/opt/homebrew/bin/sfw|/usr/local/bin/sfw)\s"
+)
 FALLBACK = re.compile(
     r"\b(npm|pnpm|yarn|pip\d*|uv|cargo|go|gem|bundle)\b[^\n;&|]*?"
     r"\b(install|add|ci|update|up|upgrade|get|sync|lock|compile)\b"
@@ -54,6 +55,7 @@ FALLBACK = re.compile(
 def split_segments(command: str) -> list[list[str]]:
     lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
     lexer.whitespace_split = True
+    lexer.commenters = ""  # bash only starts a comment at a word boundary; never hide the rest
     segments: list[list[str]] = [[]]
     for token in lexer:
         if token and set(token) <= PUNCTUATION:
@@ -63,7 +65,19 @@ def split_segments(command: str) -> list[list[str]]:
     return [segment for segment in segments if segment]
 
 
+def split_string_option(option: str, tokens: list[str], index: int) -> list[str] | None:
+    """Return the command words hidden in `env -S 'cmd ...'`, or None if not that option."""
+    if option in {"-S", "--split-string"} and index + 1 < len(tokens):
+        return shlex.split(tokens[index + 1])
+    if option.startswith("--split-string="):
+        return shlex.split(option.split("=", 1)[1])
+    if option.startswith("-S") and len(option) > 2:
+        return shlex.split(option[2:])
+    return None
+
+
 def strip_prefix(tokens: list[str]) -> list[str]:
+    tokens = list(tokens)
     index = 0
     while index < len(tokens):
         token = tokens[index]
@@ -73,7 +87,13 @@ def strip_prefix(tokens: list[str]) -> list[str]:
             takes_value = WRAPPERS[token]
             index += 1
             while index < len(tokens) and tokens[index].startswith("-"):
-                index += 2 if tokens[index] in takes_value else 1
+                option = tokens[index]
+                words = split_string_option(option, tokens, index) if token == "env" else None
+                if words is not None:
+                    consumed = 2 if option in {"-S", "--split-string"} else 1
+                    tokens[index : index + consumed] = words
+                    continue
+                index += 2 if option in takes_value else 1
             if token == "timeout":
                 index += 1
         else:
@@ -82,14 +102,11 @@ def strip_prefix(tokens: list[str]) -> list[str]:
 
 
 def uv_fetches(rest: list[str]) -> bool:
-    for position, token in enumerate(rest[:SUBCOMMAND_WINDOW]):
-        if token == "run":
-            return False
+    for position, token in enumerate(rest):
         if token in UV_DIRECT:
             return True
-        if token in UV_NESTED:
-            window = rest[position + 1 : position + 1 + SUBCOMMAND_WINDOW]
-            return any(item in UV_NESTED[token] for item in window)
+        if token in UV_NESTED and any(item in UV_NESTED[token] for item in rest[position + 1 :]):
+            return True
     return False
 
 
@@ -131,9 +148,10 @@ def is_unguarded_install(tokens: list[str]) -> bool:
         return True
     if name == "uv":
         return uv_fetches(rest)
-    if name not in GUARDED or not rest or rest[0] in NON_FETCHING_FIRST:
+    if name not in GUARDED:
         return False
-    return any(token in GUARDED[name] for token in rest[:SUBCOMMAND_WINDOW])
+    # Option arities differ per tool, so any word that is a fetch subcommand counts.
+    return any(token in GUARDED[name] for token in rest)
 
 
 def find_unguarded(command: str) -> bool:
@@ -151,7 +169,8 @@ def fails_closed(command: str) -> bool:
     match = FALLBACK.search(command)
     if match is None:
         return False
-    return re.search(r"\bsfw\b[^;&|\n]*$", command[: match.start()]) is None
+    segment_start = max(command.rfind(char, 0, match.start()) for char in ";&|\n(") + 1
+    return SFW_SEGMENT_START.match(command[segment_start : match.start()]) is None
 
 
 def main() -> int:
