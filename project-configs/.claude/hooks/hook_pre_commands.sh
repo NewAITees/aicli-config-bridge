@@ -15,9 +15,13 @@ if [ -z "$COMMAND" ] || [ ! -f "$RULES_FILE" ]; then
     exit 0
 fi
 
+# Newlines separate commands like ";" does; collapse other whitespace so that
+# spacing tricks (tabs, repeated spaces) cannot dodge the patterns.
+COMMAND=$(printf '%s' "$COMMAND" | tr '\n' ';' | tr -s '[:space:]' ' ')
+
 MATCHED_MESSAGE=""
 while IFS= read -r pattern; do
-    if echo "$COMMAND" | grep -qiE "$pattern"; then
+    if printf '%s' "$COMMAND" | grep -qiE -- "$pattern"; then
         MATCHED_MESSAGE=$(jq -r --arg p "$pattern" '.rules[] | select(.pattern == $p) | .message' "$RULES_FILE")
         break
     fi

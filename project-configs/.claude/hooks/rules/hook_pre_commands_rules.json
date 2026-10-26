@@ -1,37 +1,37 @@
 {
   "rules": [
     {
-      "pattern": "rm -rf",
-      "message": "rm -rfは不可逆な削除です。対象と復旧手段を確認してから実行してください。",
+      "pattern": "(^|[;&|(`\"'[:space:]])(/[^[:space:]]*/)?rm[[:space:]]+([^;&|]*[[:space:]])?(-[a-z]*r[a-z]*|--recursive)([[:space:]\\\"']|$)",
+      "message": "再帰的なrm（rm -rf, rm -fr, rm -r -f, --recursive など）は不可逆な削除です。対象と復旧手段を確認してから実行してください。",
       "enabled": true
     },
     {
-      "pattern": "sudo",
+      "pattern": "(^|[;&|(`\"'[:space:]])sudo([[:space:]]|$)",
       "message": "sudoによる特権操作です。必要性を確認してください。",
       "enabled": true
     },
     {
-      "pattern": "git push[^|;&]*(--force|-f\\b)",
+      "pattern": "git[[:space:]]+push([[:space:]]+[^;&|]*)?[[:space:]](--force([[:space:]=]|$)|--force-with-lease|-[a-z]*f[a-z]*([[:space:]]|$)|\\+[^[:space:]]+)",
       "message": "強制pushはリモート履歴を上書きします。上書き対象を確認してから実行してください。",
       "enabled": true
     },
     {
-      "pattern": "git reset --hard",
+      "pattern": "git[[:space:]]+reset([[:space:]]+[^;&|]*)?[[:space:]]--hard",
       "message": "git reset --hardは未コミットの変更を破棄します。破棄内容を確認してから実行してください。",
       "enabled": true
     },
     {
-      "pattern": "terraform (destroy|apply)",
+      "pattern": "terraform[[:space:]]+([^;&|]*[[:space:]])?(destroy|apply)([[:space:]]|$)",
       "message": "terraformによるインフラの破棄・適用です。影響範囲を確認してから実行してください。",
       "enabled": true
     },
     {
-      "pattern": "kubectl delete",
+      "pattern": "kubectl[[:space:]]+([^;&|]*[[:space:]])?delete([[:space:]]|$)",
       "message": "kubectlによるリソース削除です。対象と復旧手段を確認してから実行してください。",
       "enabled": true
     },
     {
-      "pattern": "drop table",
+      "pattern": "drop[[:space:]]+table",
       "message": "DROP TABLEはデータを不可逆に削除します。対象テーブルとバックアップの有無を確認してから実行してください。",
       "enabled": true
     },
