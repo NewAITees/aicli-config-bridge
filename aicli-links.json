@@ -101,6 +101,15 @@
       "create_if_missing": false
     },
     {
+      "id": "claude-hook-test-gate",
+      "name": "Claude Hook: テスト必須化ゲート",
+      "type": "file",
+      "source": "project-configs/.claude/hooks/hook_test_gate.sh",
+      "target": "~/.claude/hooks/hook_test_gate.sh",
+      "target_windows": "%USERPROFILE%\\.claude\\hooks\\hook_test_gate.sh",
+      "create_if_missing": false
+    },
+    {
       "id": "claude-statusline-command",
       "name": "Claude ステータスライン表示スクリプト",
       "type": "file",

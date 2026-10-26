@@ -55,3 +55,47 @@
 - [ ] `python --version` が壊れている原因を切り分け、開発環境前提を README かセットアップ手順に反映する
 - [x] `RTK.md` 参照の実体場所を確認し、参照切れをHook中心の共通仕様へ移行する
 - [ ] `.gitignore` と生成物管理を確認し、`__pycache__` などの不要物が作業対象に混ざらないようにする
+
+## ループエンジニアリング: 自律実行ガードレール整備（2026-08-31 承認・完了）
+
+- [x] `hook_pre_commands.sh` のstdin JSON読み取りバグを修正（`$1`実質無効化を解消）
+- [x] `hook_pre_commands_rules.json` を見直し（git commit/push全面禁止等の過剰ルールを削除、真に不可逆な操作のみ`ask`判定に）
+- [x] `hook_test_gate.sh` を新規作成（Stopフックでpytest/npm testを実行、失敗時は完了をブロック）
+- [x] `aicli-links.json` に `claude-hook-test-gate` を追加し `apply` でリンク作成
+- [x] `~/.claude/settings.json` にStopフック配線を追加（事前バックアップ済み）
+- [x] `project-configs/.claude/CLAUDE.md` の第1原則直下に、ユーザー承認による運用範囲緩和の条項を追記
+- [x] `pytest` / `ruff check` / `mypy` 全通過を確認
+- [ ] 別PC・別プロジェクトで `apply` 後にフックが実際に発火するか実環境で再検証する
+
+## 外部プラグイン導入 + vibe-diff/test-requirements スキル追加(2026-08-31 承認・完了)
+
+- [x] `claude plugin marketplace add` で anthropics/skills・trailofbits/skills・getsentry/plugin-claude を登録
+- [x] 9プラグイン（example-skills, static-analysis, second-opinion, spec-to-code-compliance,
+      audit-context-building, supply-chain-risk-auditor, security-guidance, claude-security, sentry）
+      をこのマシンにインストールし `claude plugin list` で `enabled` を確認
+- [x] `vibe-diff`・`test-requirements` を独自の配布機構ではなく、既存の `project-configs/skills/claude/`
+      + `aicli-config-bridge skills apply` に統合して作成・配布
+- [x] `docs/skills/install-external-plugins.sh` を新規作成（別PCでの外部プラグイン再現用、
+      スキル自体は本ブリッジの既存機構でカバーするため対象外）
+- [ ] `static-analysis` と `security-guidance` の役割分担（重複回避のためどちらをメインにするか）を決める
+- [ ] Sentryプラグインは別途アカウント連携（OAuth等）が必要（未実施）
+
+## マルチモデル実装委任: codex-implementスキル新規作成(2026-08-31 承認・完了)
+
+- [x] ロードマップのステップ4・5(`claude-code-router`+Ollama+ChatGPT)を性能比較し不採用と判断
+      （既存の`delegate`スキルの方が実装品質・実績で上回るため。詳細はセッション内比較）
+- [x] `delegate`スキル(agent-wrapper)はダッシュボード承認前提で「普段使い」には重いとユーザーが判断
+- [x] 軽量な代替として`codex-implement`スキルを新規作成（`codex exec -s workspace-write`の同期直接呼び出し、
+      ダッシュボードなし）。project-configs/skills/claude/codex-implement/ に配置し`skills apply`で配布
+- [x] Codexの役割は「実装後に変更内容を平易な日本語で説明する説明役」とし、レビューの正当性は
+      Claude自身が`git diff`とテスト再実行で担保する設計にした
+- [x] ステップ6(サブエージェント定義)は既存の`planner`/`implementer`/`code-reviewer`等を変更せず、
+      新規スキルの追加のみで対応（変更範囲を限定）
+- [ ] 実際のタスクで`codex-implement`スキルを使い、動作を検証する
+- [x] `codex-implement`を自前の`codex exec`直接呼び出しから、既にインストール済みの
+      `codex`プラグインの`/codex:rescue --write`(codex-companionランタイム)経由に修正
+- [x] `project-configs/.claude/CLAUDE.md`（グローバル配布）にスキル・プラグインの発火ルールを追記。
+      特にレビュー系（security-guidance/codex:review/second-opinion/static-analysis/
+      claude-security/supply-chain-risk-auditor/spec-to-code-compliance）の使い分け表を作成し、
+      `security-guidance`と`static-analysis`の役割分担の課題もここで解消
+- [ ] `spec-to-code-compliance`用の`specs/`ディレクトリ運用は未整備（仕様書がある場合のみ使う設計）
