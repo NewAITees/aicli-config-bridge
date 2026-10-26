@@ -6,7 +6,7 @@ description: 実装前に要件を定義する。成功条件、失敗条件、�
 # Spec
 
 共通仕様:
-- `/home/perso/analysis/aicli-config-bridge/docs/skills/spec-common-spec.md`
+- `../../../../docs/skills/spec-common-spec.md`
 
 ## Claude 追加運用
 

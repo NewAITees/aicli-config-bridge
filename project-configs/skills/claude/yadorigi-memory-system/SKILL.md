@@ -37,10 +37,9 @@ SessionStart hook（直近episodic＋作業ディレクトリ関連の教訓）�
 
 ## 共通仕様
 
-以下を先に参照すること:
-- `/home/perso/analysis/aicli-config-bridge/docs/skills/memory-common-spec.md`
-  - WSL内のパスのため、Windowsセッションでは `wsl -e bash -c 'cat <パス>'` で読むこと。
-- `references/skill-reference.md`（実体: `/mnt/c/Users/perso/.claude/skills/yadorigi-memory-system/references/skill-reference.md`）
+以下を先に参照すること（このSKILL.mdからの相対パス。どのマシンでも同じ記述で解決する）:
+- `../../../../docs/skills/memory-common-spec.md`
+- `references/skill-reference.md`
 
 ## 実行前提
 

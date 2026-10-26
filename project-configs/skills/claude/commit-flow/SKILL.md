@@ -6,7 +6,7 @@ description: 実装完了後の変更を検証済みコミットにする。共�
 # Commit Flow
 
 共通仕様:
-- `/home/perso/analysis/aicli-config-bridge/docs/skills/commit-flow-common-spec.md`
+- `../../../../docs/skills/commit-flow-common-spec.md`
 
 Claude 追加運用:
-- Windows/WSL共通reference: `C:\Users\perso\.claude\skills\references\commit-flow-reference.md` / `/mnt/c/Users/perso/.claude/skills/references/commit-flow-reference.md`
+- TODO: 実行順・stagingルールの補足referenceが、このリポジトリ（`project-configs/skills/claude/commit-flow/`）にまだ追加されていない。以前は特定マシンのローカルパスを指していたが、リポジトリ管理外のため他マシンから参照できず削除した。追加する場合はこのスキルフォルダ内に `references/commit-flow-reference.md` として置き、相対パスで参照する。
