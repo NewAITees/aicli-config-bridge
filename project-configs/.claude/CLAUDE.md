@@ -277,7 +277,7 @@ build/
 ### 完了後・委任前後
 
 - **`commit-flow`**: diffレビュー→検証実行→staging→コミットメッセージ作成
-- **`hook_test_gate.sh`**（Stopフック、常時自動）: テストが落ちていれば完了をブロックする
+- **`hook_test_gate.sh`**（Stopフック、自動）: テストが落ちていれば完了をブロックする。プロジェクト自身のコードを実行するため、`~/.claude/test_gate_trusted_dirs`（1行1ディレクトリ、リポジトリの外に置く）に載せたプロジェクトでだけ動く。依存の導入や解決はせず、Pythonは既存の`.venv`（`uv run --frozen --no-sync`）、Nodeは既存の`node_modules`が必要
 - **`skill-improve`**: スキルを使い終えた直後に、振り返り・改善点があれば`tasks/lessons.md`へ
 
 ### UI変更時
