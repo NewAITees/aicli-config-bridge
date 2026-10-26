@@ -41,6 +41,24 @@ def bash(command: str) -> str:
         "/opt/homebrew/bin/npm install pkg@1.0.0",
         "bash -c 'npm install pkg@1.0.0'",
         "echo done; uv lock",
+        "pip3 install requests==2.0.0",
+        "pip3.12 install requests==2.0.0",
+        "python3.12 -m pip install requests==2.0.0",
+        "sudo -u root npm install pkg@1.0.0",
+        "env -i npm install pkg@1.0.0",
+        "env -u HOME npm install pkg@1.0.0",
+        "timeout 60 npm install pkg@1.0.0",
+        "bash -lc 'npm install pkg@1.0.0'",
+        "sh -ec 'uv add pkg==1.0.0'",
+        "eval 'npm install pkg@1.0.0'",
+        "npm --prefix app install pkg@1.0.0",
+        "echo $(npm install pkg@1.0.0)",
+        "echo `uv add pkg==1.0.0`",
+        "echo pkg | xargs npm install",
+        "echo pkg | xargs -n 1 pip install",
+        "./sfw npm install pkg@1.0.0",
+        "yarn",
+        'echo "unterminated; npm install pkg@1.0.0',
     ],
 )
 def test_denies_unguarded_install(command: str) -> None:
@@ -65,6 +83,16 @@ def test_denies_unguarded_install(command: str) -> None:
         "git status",
         'echo "npm install is guarded"',
         "brew install jq",
+        "sudo -u root sfw npm install pkg@1.0.0",
+        "/opt/homebrew/bin/sfw npm install pkg@1.0.0",
+        "pip3 list",
+        "uv run pytest tests/test_add.py",
+        "uv run python add.py",
+        "npm run install-hooks",
+        "echo $(date)",
+        "sudo ls /tmp",
+        "bash -lc 'ls'",
+        "cat <<'EOF'\nit's fine\nEOF",
     ],
 )
 def test_allows_other_commands(command: str) -> None:
@@ -85,5 +113,14 @@ def test_ignores_malformed_input(stdin: str) -> None:
     assert run_hook(stdin) == ""
 
 
-def test_unbalanced_quote_does_not_block() -> None:
-    assert run_hook(bash("echo 'unterminated npm install")) == ""
+def test_unbalanced_quote_without_install_is_allowed() -> None:
+    assert run_hook(bash("echo 'unterminated")) == ""
+
+
+def test_unbalanced_quote_with_install_is_denied() -> None:
+    output = json.loads(run_hook(bash("echo 'unterminated npm install")))
+    assert output["hookSpecificOutput"]["permissionDecision"] == "deny"
+
+
+def test_unbalanced_quote_with_sfw_is_allowed() -> None:
+    assert run_hook(bash("sfw npm install pkg@1.0.0 'unterminated")) == ""
