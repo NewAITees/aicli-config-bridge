@@ -144,6 +144,7 @@ ignore = [
 - dry-run 対応
 - WSL対応のプラットフォーム検出
 - Dev Container設定
+- sfw PreToolUse Hook（`project-configs/.claude/hooks/sfw_pre_tool_use.py`、仕様は `docs/skills/sfw-common-spec.md`）
 
 #### 未実装 ❌
 - Windowsネイティブでのコピー運用（`_create_link` は常にシンボリックリンクを作成）

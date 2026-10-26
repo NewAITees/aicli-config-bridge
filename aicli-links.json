@@ -83,6 +83,15 @@
       "create_if_missing": false
     },
     {
+      "id": "claude-hook-sfw-pre-tool-use",
+      "name": "Claude Hook: sfw経由のパッケージ操作を強制",
+      "type": "file",
+      "source": "project-configs/.claude/hooks/sfw_pre_tool_use.py",
+      "target": "~/.claude/hooks/sfw_pre_tool_use.py",
+      "target_windows": "%USERPROFILE%\\.claude\\hooks\\sfw_pre_tool_use.py",
+      "create_if_missing": false
+    },
+    {
       "id": "claude-hook-rules-dir",
       "name": "Claude Hookルール定義",
       "type": "directory",
