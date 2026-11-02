@@ -6,7 +6,7 @@
 | meta         | AIとの協働ルール              | 14     | 3    |
 | boundary     | データ型・変換・境界契約      | 25     | 2    |
 | architecture | 設計・責務・config            | 37     | 7    |
-| quality      | テスト・CI/CD・品質保証       | 73     | 1    |
+| quality      | テスト・CI/CD・品質保証       | 73     | 2    |
 | ui           | フロントエンド・デザイン・VRM | 79     | 0    |
 
 ---
@@ -85,5 +85,10 @@
 - **症状**: `status --json` がテーブルとJSONを同時に出力し、`apply` の処理エラーも終了コードへ反映されていなかった。
 - **原因**: CLI出力とドメイン処理の成功判定を個別にテストしていなかった。
 - **対策**: 機械可読モードは専用出力にし、入力値検証とエラー終了をCLI境界で行う。対象外リンクを削除しない安全性もテストで固定する。
+
+### hooks: 単体テストは既知パターンしか守れず、バイパスはレビューで見つかった
+- **症状**: `test_sfw_hook.py` / `test_pre_commands_hook.py` が通っている状態でも、直近5コミット（`match rm and sudo behind paths...` / `close remaining sfw hook bypasses found in review` / `harden dangerous-command rules against spacing and flag variants` / `run the Stop test gate only in trusted directories` / `close sfw hook bypasses and fail closed on unparseable commands`）が示すように、パス区切り・バックスラッシュ・スペース変則・フラグ変種などのバイパスは単体テストでは検出されず、別途のレビューで後から見つかった。
+- **原因**: 単体テストは「書いた時点で想定した入力パターン」しか検証しないため、攻撃的・敵対的な入力変種（コードベースグレーダーが取りこぼす「想定外の別解」と同じ構造）は自動では洗い出せない。
+- **対策**: 危険コマンド検知系のHook（`hook_pre_commands.sh` / `sfw_pre_tool_use.py`）を変更・新規作成するときは、既存テストが通ることに加えて、敵対的な入力変種（引用符の不整合、バックスラッシュ、スペース/タブ、フラグの順序違い、環境変数越しの呼び出し等）を狙ったレビュー（`code-review` / `security-review` 等）を別途通す。単体テストだけで「検証済み」と報告しない。
 
 ## ui — フロントエンド・デザイン・VRM

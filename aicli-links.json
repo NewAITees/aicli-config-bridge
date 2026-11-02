@@ -12,6 +12,15 @@
       "create_if_missing": false
     },
     {
+      "id": "claude-global-settings",
+      "name": "Claude グローバル設定 (settings.json: hooks配線・共通permissions)",
+      "type": "file",
+      "source": "project-configs/.claude/settings.json",
+      "target": "~/.claude/settings.json",
+      "target_windows": "%USERPROFILE%\\.claude\\settings.json",
+      "create_if_missing": false
+    },
+    {
       "id": "codex-global-agents",
       "name": "Codex グローバル指示 (AGENTS.md)",
       "type": "file",
