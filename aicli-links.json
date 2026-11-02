@@ -12,30 +12,12 @@
       "create_if_missing": false
     },
     {
-      "id": "claude-global-settings",
-      "name": "Claude グローバル設定 (settings.json: hooks配線・共通permissions)",
-      "type": "file",
-      "source": "project-configs/.claude/settings.json",
-      "target": "~/.claude/settings.json",
-      "target_windows": "%USERPROFILE%\\.claude\\settings.json",
-      "create_if_missing": false
-    },
-    {
       "id": "codex-global-agents",
       "name": "Codex グローバル指示 (AGENTS.md)",
       "type": "file",
       "source": "project-configs/.codex/AGENTS.md",
       "target": "~/.codex/AGENTS.md",
       "target_windows": "%USERPROFILE%\\.codex\\AGENTS.md",
-      "create_if_missing": false
-    },
-    {
-      "id": "codex-global-hooks",
-      "name": "Codex グローバルHook設定 (hooks.json)",
-      "type": "file",
-      "source": "project-configs/.codex/hooks.json",
-      "target": "~/.codex/hooks.json",
-      "target_windows": "%USERPROFILE%\\.codex\\hooks.json",
       "create_if_missing": false
     },
     {
@@ -125,6 +107,33 @@
       "source": "project-configs/.claude/statusline-command.sh",
       "target": "~/.claude/statusline-command.sh",
       "target_windows": "%USERPROFILE%\\.claude\\statusline-command.sh",
+      "create_if_missing": false
+    },
+    {
+      "id": "codex-guard-hook-adapter",
+      "name": "Codex sfw・危険操作・テストゲート",
+      "type": "file",
+      "source": "project-configs/.codex/hooks/guard.py",
+      "target": "~/.codex/hooks/guard.py",
+      "target_windows": "%USERPROFILE%\\.codex\\hooks\\guard.py",
+      "create_if_missing": false
+    },
+    {
+      "id": "opencode-global-agents",
+      "name": "OpenCode グローバル指示 (AGENTS.md)",
+      "type": "file",
+      "source": "project-configs/.config/opencode/AGENTS.md",
+      "target": "~/.config/opencode/AGENTS.md",
+      "target_windows": "%USERPROFILE%\\.config\\opencode\\AGENTS.md",
+      "create_if_missing": false
+    },
+    {
+      "id": "opencode-guard-plugin",
+      "name": "OpenCode 実行前ガード・RTK",
+      "type": "directory",
+      "source": "project-configs/.config/opencode/plugins/aicli-guardrails",
+      "target": "~/.config/opencode/plugins/aicli-guardrails",
+      "target_windows": "%USERPROFILE%\\.config\\opencode\\plugins\\aicli-guardrails",
       "create_if_missing": false
     }
   ]
