@@ -234,7 +234,7 @@ select = [
     "ANN",  # type annotation
     "E",    # pycodestyle errors
     "F",    # pyflakes
-    "I",    # isort
+    "I",    # import sorting (ruff's built-in isort-equivalent, not the isort package)
     "RUF",  # ruff specific rules
     "W",    # pycodestyle warnings
 ]
