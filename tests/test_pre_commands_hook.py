@@ -25,7 +25,7 @@ def home(tmp_path: Path) -> Path:
 def run_hook(home: Path, command: str) -> str:
     payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
     result = subprocess.run(
-        ["/bin/bash", str(SCRIPT)],
+        ["bash", str(SCRIPT)],
         input=payload,
         env={**os.environ, "HOME": str(home)},
         capture_output=True,

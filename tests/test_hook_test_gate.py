@@ -36,12 +36,12 @@ def run_gate(
         trust_file.write_text(f"# trusted projects\n{project if trusted else tmp_path / 'other'}\n")
     env = {
         **os.environ,
-        "PATH": f"{bin_dir}:{os.environ['PATH']}",
+        "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}",
         "CLAUDE_PROJECT_DIR": str(project),
         "CLAUDE_TEST_GATE_TRUST_FILE": str(trust_file),
     }
     result = subprocess.run(
-        ["/bin/bash", str(SCRIPT)], env=env, capture_output=True, text=True, check=False
+        ["bash", str(SCRIPT)], env=env, capture_output=True, text=True, check=False
     )
     return result, calls
 
