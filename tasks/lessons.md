@@ -3,11 +3,11 @@
 ## INDEX
 | カテゴリ     | 説明                          | 開始行 | 件数 |
 |--------------|-------------------------------|--------|------|
-| meta         | AIとの協働ルール              | 14     | 4    |
-| boundary     | データ型・変換・境界契約      | 35     | 2    |
-| architecture | 設計・責務・config            | 47     | 10   |
-| quality      | テスト・CI/CD・品質保証       | 98     | 1    |
-| ui           | フロントエンド・デザイン・VRM | 104    | 0    |
+| meta         | AIとの協働ルール              | 22     | 4    |
+| boundary     | データ型・変換・境界契約      | 43     | 2    |
+| architecture | 設計・責務・config            | 55     | 10   |
+| quality      | テスト・CI/CD・品質保証       | 106    | 3    |
+| ui           | フロントエンド・デザイン・VRM | 122    | 0    |
 
 ---
 
@@ -100,5 +100,15 @@
 - **症状**: `status --json` がテーブルとJSONを同時に出力し、`apply` の処理エラーも終了コードへ反映されていなかった。
 - **原因**: CLI出力とドメイン処理の成功判定を個別にテストしていなかった。
 - **対策**: 機械可読モードは専用出力にし、入力値検証とエラー終了をCLI境界で行う。対象外リンクを削除しない安全性もテストで固定する。
+
+### hooks: 単体テストは既知パターンしか守れず、バイパスはレビューで見つかった
+- **症状**: `test_sfw_hook.py` / `test_pre_commands_hook.py` が通っている状態でも、直近5コミット（`match rm and sudo behind paths...` / `close remaining sfw hook bypasses found in review` / `harden dangerous-command rules against spacing and flag variants` / `run the Stop test gate only in trusted directories` / `close sfw hook bypasses and fail closed on unparseable commands`）が示すように、パス区切り・バックスラッシュ・スペース変則・フラグ変種などのバイパスは単体テストでは検出されず、別途のレビューで後から見つかった。
+- **原因**: 単体テストは「書いた時点で想定した入力パターン」しか検証しないため、攻撃的・敵対的な入力変種（コードベースグレーダーが取りこぼす「想定外の別解」と同じ構造）は自動では洗い出せない。
+- **対策**: 危険コマンド検知系のHook（`hook_pre_commands.sh` / `sfw_pre_tool_use.py`）を変更・新規作成するときは、既存テストが通ることに加えて、敵対的な入力変種（引用符の不整合、バックスラッシュ、スペース/タブ、フラグの順序違い、環境変数越しの呼び出し等）を狙ったレビュー（`code-review` / `security-review` 等）を別途通す。単体テストだけで「検証済み」と報告しない。
+
+### windows: hookを初めてネイティブWindowsで実配線すると、複数のCRLF/パス問題が一度に露出する
+- **症状**: `~/.claude/settings.json`にhookを初めて配線した際、以下が連鎖的に発覚した。(1) `.gitattributes`がリポジトリに存在せず、WindowsチェックアウトでシェルスクリプトがCRLFになっていた → `hook_pre_commands.sh`が`bash`経由（非対話実行）だと`$'\r': command not found`で構文エラーになる。(2) jq.exe（winget版）の出力はCRLFで、`read -r`は`\n`しか剥がさないため、ルールパターン文字列の末尾に`\r`が残り、どのルールも二度とマッチしなくなる（exit 0で「正常に見える」サイレントバイパス）。(3) Pythonの`subprocess.run(["bash", str(path)])`で、WindowsのバックスラッシュパスをMSYS2 bashの引数として渡すとエスケープ解釈で消失する。(4) 素の`"bash"`はWindowsのCreateProcessがPATHより先にSystem32を探すため、WSLの起動スタブ（`C:\Windows\System32\bash.exe`）に解決されてしまい、Windowsパスを認識できない。
+- **原因**: このプロジェクトはWSLで主に開発・デプロイされており、Windowsネイティブでのhook実行は今回が初めてだった。CRLF対策・jq出力・サブプロセス呼び出しのいずれも、WSL/Linux環境では問題にならないため今まで気づかれていなかった。
+- **対策**: 新しいOS/実行経路でhookやそのテストを初めて「本当に動かす」ときは、スクリプトが構文的に実行できること（CRLF混入）、ルールマッチングが実際に発火すること（jqの改行コード）、サブプロセス越しの呼び出しでパスが壊れないこと（バックスラッシュ、System32のbash.exeスタブ）を個別に確認する。`.gitattributes`は`eol=lf`を明示し、新規リポジトリでは最初から配置する。テストから外部コマンドを呼ぶときは`shutil.which()`で解決したパスを使い、`str(path)`をそのまま渡さず`Path.as_posix()`を使う。
 
 ## ui — フロントエンド・デザイン・VRM

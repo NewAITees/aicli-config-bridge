@@ -34,4 +34,4 @@ Keep implementation tight, testable, and grounded in evidence.
 - Do not skip validation because the change looks small.
 - Do not add unrelated cleanup while the behavior is still unstable.
 - Do not move on while warnings or errors still explain the problem.
-- See `/home/perso/analysis/aicli-config-bridge/docs/skills/feedback-loop-common-spec.md` for the shared contract.
+- See `../../../../docs/skills/feedback-loop-common-spec.md` for the shared contract.

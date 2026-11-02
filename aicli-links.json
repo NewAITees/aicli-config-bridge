@@ -12,6 +12,15 @@
       "create_if_missing": false
     },
     {
+      "id": "claude-global-settings",
+      "name": "Claude グローバル設定 (settings.json: hooks配線・共通permissions)",
+      "type": "file",
+      "source": "project-configs/.claude/settings.json",
+      "target": "~/.claude/settings.json",
+      "target_windows": "%USERPROFILE%\\.claude\\settings.json",
+      "create_if_missing": false
+    },
+    {
       "id": "codex-global-agents",
       "name": "Codex グローバル指示 (AGENTS.md)",
       "type": "file",
@@ -80,6 +89,15 @@
       "source": "project-configs/.claude/hooks/hook_stop_words.sh",
       "target": "~/.claude/hooks/hook_stop_words.sh",
       "target_windows": "%USERPROFILE%\\.claude\\hooks\\hook_stop_words.sh",
+      "create_if_missing": false
+    },
+    {
+      "id": "claude-hook-sfw-pre-tool-use",
+      "name": "Claude Hook: sfw経由のパッケージ操作を強制",
+      "type": "file",
+      "source": "project-configs/.claude/hooks/sfw_pre_tool_use.py",
+      "target": "~/.claude/hooks/sfw_pre_tool_use.py",
+      "target_windows": "%USERPROFILE%\\.claude\\hooks\\sfw_pre_tool_use.py",
       "create_if_missing": false
     },
     {

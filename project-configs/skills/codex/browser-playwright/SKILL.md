@@ -29,4 +29,4 @@ Use Playwright MCP for browser tasks.
 - After clicks, submits, or navigation, re-snapshot before the next action.
 - When debugging, inspect console and network before retrying blind actions.
 - Keep the workflow deterministic and small-step.
-- See `/home/perso/analysis/aicli-config-bridge/docs/skills/playwright-common-spec.md` for the shared contract.
+- See `../../../../docs/skills/playwright-common-spec.md` for the shared contract.

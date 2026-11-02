@@ -36,4 +36,4 @@ Turn a completed change into a clean commit.
 - If validation fails, fix it before committing.
 - If the diff is wider than intended, split the work.
 - If the commit message cannot explain the change, rewrite it.
-- See `/home/perso/analysis/aicli-config-bridge/docs/skills/commit-flow-common-spec.md` for the shared contract.
+- See `../../../../docs/skills/commit-flow-common-spec.md` for the shared contract.

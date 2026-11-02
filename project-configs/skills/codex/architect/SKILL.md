@@ -35,4 +35,4 @@ Improve code structure without changing intent.
 - Do not refactor everything at once.
 - Do not change behavior just to make the code look different.
 - Do not expand the scope beyond the structural issue being addressed.
-- See `/home/perso/analysis/aicli-config-bridge/docs/skills/architect-common-spec.md` for the shared contract.
+- See `../../../../docs/skills/architect-common-spec.md` for the shared contract.

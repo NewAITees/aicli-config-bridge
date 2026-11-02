@@ -27,9 +27,9 @@ Treat it as an operations guide for the current implementation, not as a design 
 
 ## Shared Rules
 
-Follow the common operating contract in:
-- `/home/perso/analysis/aicli-config-bridge/docs/skills/memory-common-spec.md`
-- `references/skill-reference.md`（実体: `/mnt/c/Users/perso/.codex/skills/yadorigi-memory-system/references/skill-reference.md`）
+Follow the common operating contract in (paths are relative to this SKILL.md, so they resolve the same on every machine):
+- `../../../../docs/skills/memory-common-spec.md`
+- `references/skill-reference.md`
 
 ## Runtime Prerequisites
 
@@ -144,7 +144,7 @@ Use the repo `.env` values as the source of truth for runtime configuration.
 ## References
 
 Read these files as needed:
-- `/home/perso/analysis/aicli-config-bridge/docs/skills/memory-common-spec.md` for the shared contract
+- `../../../../docs/skills/memory-common-spec.md` for the shared contract
 - `references/skill-reference.md` for settings and runtime map
 - `C:/analysis2/yadorigi/docs/segmentation_spec.md` / WSL `/mnt/c/analysis2/yadorigi/docs/segmentation_spec.md` for segmentation details
 - `C:/analysis2/yadorigi/docs/next_spec.md` / WSL `/mnt/c/analysis2/yadorigi/docs/next_spec.md` for next-phase status

@@ -15,10 +15,21 @@ if [ -z "$COMMAND" ] || [ ! -f "$RULES_FILE" ]; then
     exit 0
 fi
 
+# Newlines separate commands like ";" does; collapse other whitespace so that
+# spacing tricks (tabs, repeated spaces) cannot dodge the patterns.
+COMMAND=$(printf '%s' "$COMMAND" | tr '\n' ';' | tr -s '[:space:]' ' ')
+
 MATCHED_MESSAGE=""
 while IFS= read -r pattern; do
-    if echo "$COMMAND" | grep -qiE "$pattern"; then
+    # A native Windows jq.exe writes CRLF, which `read` only splits on the
+    # trailing \n, leaving a stray \r stuck to $pattern. That \r then
+    # becomes a required literal character at the end of the regex, so
+    # every rule silently stops matching. Strip it so the hook works the
+    # same whether jq.exe (Windows) or jq (WSL/Linux) produced the line.
+    pattern="${pattern%$'\r'}"
+    if printf '%s' "$COMMAND" | grep -qiE -- "$pattern"; then
         MATCHED_MESSAGE=$(jq -r --arg p "$pattern" '.rules[] | select(.pattern == $p) | .message' "$RULES_FILE")
+        MATCHED_MESSAGE="${MATCHED_MESSAGE%$'\r'}"
         break
     fi
 done < <(jq -r '.rules[] | select(.enabled == true) | .pattern' "$RULES_FILE")

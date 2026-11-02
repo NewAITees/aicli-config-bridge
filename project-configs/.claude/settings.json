@@ -1,0 +1,75 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rtk git *)",
+      "Bash(rtk grep *)",
+      "Bash(rtk ls *)",
+      "Bash(rtk read *)",
+      "Bash(rtk find *)",
+      "Bash(rtk wc *)",
+      "Bash(rtk curl *)",
+      "Bash(sfw uv *)",
+      "Bash(uv add *)",
+      "Bash(uv run *)",
+      "Bash(git check-ignore *)",
+      "Bash(git mv *)",
+      "Bash(netstat -ano)",
+      "Bash(echo \"---exit:$?\")",
+      "Bash(echo \"exit:$?\")",
+      "Bash(echo \"started pid $!\")",
+      "Bash(grep -E \"=====.*=====\\\\s*$\")",
+      "Bash(Select-Object FullName)",
+      "Bash(Select-Object -Property Name, PSIsContainer)",
+      "Bash(Sort-Object Name)",
+      "Bash(ConvertTo-Json)",
+      "Read(//c/Users/perso/AppData/Local/Temp/**)"
+    ],
+    "additionalDirectories": [
+      "\\tmp",
+      "C:\\Users\\perso\\.claude"
+    ]
+  },
+  "model": "sonnet",
+  "effortLevel": "medium",
+  "tui": "fullscreen",
+  "theme": "dark-daltonized",
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": true,
+  "enabledPlugins": {
+    "codex@openai-codex": true,
+    "tokeneconomizer@tokeneconomizer": true
+  },
+  "extraKnownMarketplaces": {
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
+      }
+    },
+    "tokeneconomizer": {
+      "source": {
+        "source": "directory",
+        "path": "C:\\Users\\perso\\tools\\TokenEconomizer"
+      }
+    }
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "rtk hook claude" },
+          { "type": "command", "command": "python3 ~/.claude/hooks/sfw_pre_tool_use.py" },
+          { "type": "command", "command": "~/.claude/hooks/hook_pre_commands.sh" }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "~/.claude/hooks/hook_test_gate.sh" }
+        ]
+      }
+    ]
+  }
+}
