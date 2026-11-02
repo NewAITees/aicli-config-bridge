@@ -80,3 +80,7 @@ node --check "$env:USERPROFILE\.codex\hooks\rtk_pre_tool_use.mjs"
 3. Linux版へのリンクを外し、`~/.local/bin/rtk.windows-backup`を`~/.local/bin/rtk`へ戻す。
 
 復旧時も、現在のファイルとリンク先を確認してから操作する。
+
+## OpenCode / Safety Ordering
+
+`plugins/aicli-guardrails/index.js` は共通guardの許可後に `rtk hook claude` を直接起動し、updatedInputのcommandだけを採用する。Codexも安全検査とRTKの両方を配線し、検査には元のtool_inputを渡す。Codexの同一イベントの複数command hookは並行実行されるため、配列順が直列実行を保証するとはみなさない。RTKとjq/bashのCRLF問題を混同しない。

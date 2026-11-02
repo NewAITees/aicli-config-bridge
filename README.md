@@ -16,7 +16,7 @@ A streamlined configuration management tool for AI CLI applications, enabling ce
 
 ## Portable Skills
 
-Custom skills are stored under `project-configs/skills/` and deployed to Codex and Claude as
+Custom skills are stored under `project-configs/skills/` and deployed to Codex, Claude, and OpenCode 2 as
 per-skill symbolic links. System skills, plugin caches, secrets, and runtime history are excluded.
 
 ```bash
@@ -26,7 +26,7 @@ uv run aicli-config-bridge skills import /path/to/my-skill
 ```
 
 Shared skills live in `project-configs/skills/shared/`. Agent-specific variants live in the
-`codex/` and `claude/` directories. Source edits are immediately visible to linked agents on the
+`codex/`, `claude/`, and `opencode/` directories. Source edits are immediately visible to linked agents on the
 same machine. Other machines receive changes after Git synchronization and `skills apply`.
 
 ## How It Works
@@ -158,3 +158,17 @@ pytest --cov=aicli_config_bridge tests/
 ---
 
 **Note**: This tool manages symbolic links to system configuration files. Always back up existing configurations before using it.
+
+## Cross-Agent Guardrails
+
+The November 2026 rollout includes intent/mode guidance, sfw package protection,
+dangerous-command checks, trusted-project tests, and portable skill distribution.
+See [rollout and verification](docs/settings/cross-agent-rollout.md) and
+[commit-by-commit audit](docs/settings/cross-agent-history-audit.md).
+
+Personal `settings.json` / `hooks.json` are merge targets, not whole-file links.
+Preview Codex hooks with `python docs/settings/merge-codex-hooks.py`; add `--apply`
+only when the target and backup are understood. Codex hooks require review/trust
+in `/hooks`. OpenCode 2 uses a native plugin directory and native ask/deny; no
+automatic Stop gate is claimed. Unreadable Windows links are reported as
+`inaccessible` and never overwritten by `skills apply`.

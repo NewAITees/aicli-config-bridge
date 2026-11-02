@@ -116,4 +116,4 @@ WSL側の `~/.claude/settings.json` は、Windows側と異なり**シンボリ�
 
 代わりに、既存ファイルへ本プロジェクトのhook登録（`sfw_pre_tool_use.py`をPreToolUse、`hook_test_gate.sh`をStop）だけを**追記**する方式にした（編集前に`~/.claude/.aicli-backup/settings.json.backup_20261102_manual_hook_wiring`へバックアップ済み）。`hook_pre_commands.sh`・`hook_stop_words.sh`・RTKは元から配線済みだった。
 
-この非対称性（Windows=シンボリックリンク全体管理、WSL=既存ファイルへの部分追記）は意図的なもの。`aicli-links.json`の`claude-global-settings`はWindows側の管理のみを表しており、WSL側はこのリポジトリのリンク管理の対象外として運用する。
+この非対称性（Windows=シンボリックリンク全体管理、WSL=既存ファイルへの部分追記）は意図的なもの。`claude-global-settings`は当時の設計図では通常targetも持っており、Windows限定という説明と実装が食い違っていた。2026-11-02の横展開では全ファイルリンクから除外し、以後の配置は両OSとも必要なHookのみ部分マージする。既存リンクは自動削除しない。

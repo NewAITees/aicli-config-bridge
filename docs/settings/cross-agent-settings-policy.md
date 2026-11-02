@@ -1,55 +1,32 @@
-# Cross Agent Settings Policy
+# エージェント横断の設定方針 / Cross Agent Settings Policy
 
-## Goal
+同じ運用意図をClaude Code・Codex・OpenCodeのネイティブ形式へ写像する。モデル・認証・プロバイダー・MCP・個別permissionsは移植対象と混同しない。
 
-`codex` と `claude` の設定を同一ファイルに統一するのではなく、同じ運用意図を別形式へ写像できる状態にする。
+| 意図 | Claude Code | Codex | OpenCode |
+|---|---|---|---|
+| グローバル指示 | `~/.claude/CLAUDE.md` | `~/.codex/AGENTS.md` | `~/.config/opencode/AGENTS.md` |
+| スキル | `~/.claude/skills/` | `~/.codex/skills/` | `~/.config/opencode/skills/` |
+| 実行前 | settings.jsonのPreToolUse | hooks.jsonのPreToolUse、matcher Bash（exec_commandを含む） | v2のpermission evaluate / shell create.before |
+| sfwなしの取得 | deny | deny | 例外で拒否 |
+| 危険操作 | ask | ask未対応につきdeny | ネイティブpermission ask |
+| テストゲート | Stop | Stop、失敗はdecision block | 完了前の明示CLI実行。自動Stopとは呼ばない |
+| Hookの有効化 | 設定の部分マージ | 部分マージ後に/hooksで定義を確認・信頼 | 個別ローカルpluginファイルを配置 |
 
-## Shared Intent
+共通実装は `project-configs/shared/hooks/agent_guard.py`。sfwパーサーと危険操作ルールは既存Claude版を参照する。Codex/OpenCodeアダプターはリンクの実体から管理リポジトリを解決するため、単体コピーせず管理リンクを使い、リポジトリ全体を保持する。
 
-両環境で共通化したい意図:
-- 危険コマンドを制限する
-- 必要なプロジェクトだけ trusted にする
-- ブラウザ操作や MCP を必要最小限で有効化する
-- ローカル補助設定を本体設定から分離する
+## 個人設定の保持 / Preserve Local Settings
 
-## Mapping Areas
+- `settings.json`、`hooks.json`、`opencode.jsonc` はプロジェクト・マシン固有設定と共有設定が混在する。ファイル全体を上書き・リンクしない。
+- Claudeの管理settings.jsonとCodexの管理hooks.jsonはマージ元のテンプレート。`aicli-links.json` の全ファイルリンクから除外する。既にある配置は自動削除しない。
+- 必要なHook登録だけを重複なく追加する。既存のdeny、他Hook、プラグイン、プロバイダーは保持する。変更前は元の内容・リンク先をバックアップする。
+- `test_gate_trusted_dirs` はAgentごとにホーム側で管理し、Git管理しない。プロジェクトが自分を信頼できないようにする。各行は実在する絶対パス、完全一致とする。子フォルダを自動的に信頼しない。
+- Windows/WSLは独立に検証する。Windowsの更新だけでWSLへ反映済みとは言わない。MCP等のOS依存パスをコピーしない。
+- Hookファイルの書込みや登録だけで有効とは判定しない。Codexは非管理Hook定義の信頼が必要で、更新後は再確認対象となる。信頼を迂回する起動フラグを使わない。
 
-### Permissions
+## 検証 / Verification
 
-- `claude`: `settings.json` / `settings.local.json` の `permissions`
-- `codex`: 実行環境側の sandbox 設定 + trust 設定 + 承認フロー
+stdin JSON、拒否出力、Stop失敗継続、未信頼時の未実行、依存非導入を個別に確かめる。実行前に元コマンドを検査し、RTKの最適化成功を安全検査の成功と混同しない。実際のエージェント上で拒否を確認していなければ、その範囲は未検証と報告する。
 
-### Hooks / Lifecycle
+一次情報（2026-11-02確認）: [Codex Hooks](https://learn.chatgpt.com/docs/hooks)、[OpenCode Plugins](https://opencode.ai/v2/docs/build/plugins/server/)、[Rules](https://opencode.ai/v2/docs/instructions/)、[Skills](https://opencode.ai/v2/docs/skills/)。
 
-- `claude`: `hooks.SessionStart`, `PreToolUse`, `Stop`
-- `codex`: 明示的な hook 設定よりも、スキルと実行ポリシーで代替される箇所が多い
-
-### Plugins / MCP
-
-- `claude`: `enabledPlugins`, `extraKnownMarketplaces`, `mcpServers`
-- `codex`: `plugins.*`, `mcp_servers.*`
-
-### Project Trust
-
-- `claude`: 明示的な project trust というより、permissions と local override の組み合わせ
-- `codex`: `projects."<path>".trust_level`
-
-## Policy Rules
-
-1. まず「許可したい理由」を決め、その後に環境ごとの書式へ落とす
-2. ローカル一時調整は `claude/settings.local.json` のような override 層へ分離する
-3. `codex` 側では永続 trust と一時承認を混同しない
-4. Playwright や memory 系の設定は、スキル本文ではなく設定ポリシーか reference に集約する
-
-## Current Gaps
-
-- `claude` は hook 駆動が強い
-- `codex` は project trust と機能フラグが強い
-- 同じ意図でも設定の置き場所が違うため、対応表が必要
-
-## WSL / Windows Policy
-
-- Claudeは同一のWindows側設定をWSLから参照するため、`/mnt/c/Users/perso/.claude/` と `C:\Users\perso\.claude\` の対応を併記する。
-- CodexはWSLとWindowsで `config.toml` が分かれるため、各環境のネイティブパスで同じtrust意図を記述する。
-- WindowsからWSLのリポジトリをtrustする場合は `\\wsl.localhost\Ubuntu\...` を使い、WSLからWindows側の作業領域をtrustする場合は `/mnt/c/...` を使う。
-- MCPの実行ファイルやランナーはOS依存のため、同じ設定をコピーせず、環境ごとの実体パスを維持する。
+テストの内部タイムアウトは120秒、Codex側のHook timeoutは130秒。タイムアウトで直下プロセスは停止するが、テストが起動した子孫プロセスの停止までは保証しない。

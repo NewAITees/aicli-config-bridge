@@ -22,7 +22,9 @@ AI CLI設定ブリッジ / AI CLI Config Bridge
 ├─ 設定資産 / Configuration Assets
 │  ├─ リンク設計図 / Link Blueprint
 │  ├─ 管理対象設定 / Managed Configurations
-│  └─ 配置先参照 / Target References
+│  ├─ 配置先参照 / Target References
+│  ├─ 三者の運用指示・スキル / Three-Agent Instructions and Skills
+│  └─ 共通安全ガード / Shared Guardrails
 └─ 開発基盤 / Development Foundation
    ├─ テスト / Tests
    ├─ ドキュメント / Documentation
@@ -110,7 +112,7 @@ flowchart LR
 
 ### スキル正本 / Skill Source of Truth
 
-- **役割 / Responsibility**: 自作スキルをGit管理し、Codex・Claudeおよび別PCへ再配置可能にする
+- **役割 / Responsibility**: 自作スキルをGit管理し、Codex・Claude・OpenCodeおよび別PCへ再配置可能にする
 - **実装 / Implementation**:
   - Shared: `project-configs/skills/shared/`
   - Codex Variants: `project-configs/skills/codex/`
@@ -183,3 +185,28 @@ flowchart LR
 ## 未解決の観察 / Unresolved Observations
 
 現在、未解決の記録はない。
+
+## 横展開の実装対応 / Cross-Agent Mapping（2026-11-02）
+
+### 三者の運用指示・スキル / Three-Agent Instructions and Skills
+- **役割 / Responsibility**: 最新の運用意図をClaude Code・Codex・OpenCode v2へ写像する
+- **親 / Parent**: 設定資産 / Configuration Assets
+- **実装 / Implementation**: `project-configs/.claude/CLAUDE.md`、`.codex/AGENTS.md`、`.config/opencode/AGENTS.md`。スキルは `project-configs/skills/{shared,claude,codex,opencode}`、配置は `src/aicli_config_bridge/skills.py`
+- **指示に使える表現 / Human Labels**: 横展開、Claude変更の移植、OpenCode対応、Codex対応
+
+### 共通安全ガード / Shared Guardrails
+- **役割 / Responsibility**: sfw、危険操作、信頼限定のテストゲートを共用する
+- **親 / Parent**: 設定資産 / Configuration Assets
+- **実装 / Implementation**: `project-configs/shared/hooks/agent_guard.py`、Codex `hooks/guard.py`、OpenCode v2 `plugins/aicli-guardrails/index.js`。sfwパーサーと危険操作ルールはClaude正本を参照
+- **画面上の位置・利用者からの見え方 / Human View**: Codexは危険操作denyとStop、OpenCodeはネイティブask/denyと明示テスト。settings/hooks混在ファイルは個人設定を保持して部分マージ
+- **曖昧になりやすい表現 / Ambiguous Labels**: 配置・有効化・実行時の阻止を区別する。Codexの/hooksによる信頼は別段階。Windows配置をWSL反映とみなさない
+
+### Windows配置の現在状態 / Current Windows Deployment（2026-11-02 追加承認OK後）
+- **配置 / Deployment**: Codex14スキル・OpenCode11スキルを含む31管理リンクをWindowsチェックアウトの正本へ配置。旧14対象は各`.aicli-backup/`へ退避。
+- **検証 / Verification**: 31リンク・46ファイルのSHA一致、Codex Hook部分マージの冪等性、OpenCode live plugin activeを確認。
+- **残り / Remaining**: CodexのPreToolUse guardはenabled=false/trust=modified、RTK/Stopはenabled=true/trust=untrusted。正式/hooksでの信頼・guard有効化は自動承認レビューにより明示承認待ち。配置完了をCodex保護有効と混同しない。
+- **境界 / Boundary**: Claudeの設定・スキル、認証、モデル、MCP、.system、WSLホームは今回変更していない。
+
+### 開発レビュー / Development Review（2026-11-02）
+- **実装 / Implementation**: docs/settings/development-review-2026-11-02.md。個人Hookの識別は既知ランチャー全体に限定し、Windows標準削除エイリアスも共通判定の対象とする。
+- **検証 / Verification**: Windows全277テスト・lint・整形・型・構文を通過。Hookの信頼と配置の記録は横展開時点の状態で、今回の再検証対象外。

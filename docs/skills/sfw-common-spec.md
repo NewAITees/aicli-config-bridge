@@ -52,7 +52,7 @@ aicli-config-bridge
 - `npx` `uvx` `pnpm dlx` `bunx` `pipx`、`uv run --with`、`brew` は対象外（ローカルのバイナリ実行と区別できず誤検出が増えるため、ad hocなパッケージ取得として残る）。
 - コマンド文字列の解析による防御であり、悪意をもって隠された呼び出し（変数展開、別スクリプト経由など）は防げない。確実に強制するにはネットワークやプロキシ側で止める必要がある。
 - ヒアドキュメントなどで解析不能になり、本文にパッケージ取得に見える語の並びがある場合は、誤って拒否される。`sfw` を前に付けるか、本文を引用符で整える。
-- Claude Code経由のBashにのみ効く。手動で打つコマンドやCodexには効かない（Codex用は別途）。
+- Claude CodeのBash、および配置・有効化済みのCodex実行前Hook / OpenCode実行前プラグインに効く。Codex/OpenCode v2は共通ドライバーから同じsfwパーサーを利用する。手動コマンドは対象外。CodexのHook信頼・OpenCodeのplugin読込が未完なら強制は有効ではない。
 - `sfw` は実行のたびに最新のsfwバイナリをダウンロードする。守る側のツールが版固定されていない更新を取り込む点は、このHookでは解決しない。
 - バージョンのexact固定（`==` `@x.y.z`）はHookでは検査せず、メッセージで促すのみ。
 
@@ -67,3 +67,7 @@ echo '{"tool_input":{"command":"npm install pkg@1.0.0"}}' | python3 ~/.claude/ho
 ```
 
 出力が `permissionDecision: deny` を含めば有効。`sfw npm install pkg@1.0.0` を渡した場合は出力なし。
+
+## Codex / OpenCode
+
+`project-configs/shared/hooks/agent_guard.py pre --agent codex|opencode` を薄いアダプターから呼ぶ。標準ライブラリだけで処理しjq/bashは起動しない。アダプターは不正JSON・ルール欠損・パーサー障害を拒否する（従来Claude単体Hookの不正JSON無出力とは異なる）。Windowsの.exe/.cmd/.ps1表記も検査するが、動的なPowerShellや任意の子スクリプトの完全解析はしない。
