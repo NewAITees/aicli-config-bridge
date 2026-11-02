@@ -15,7 +15,11 @@ fi
 INPUT=$(cat)
 
 # Check for forbidden words using jq
+# A native Windows jq.exe writes CRLF; `read` keeps the stray \r on
+# $pattern, which then stops matching anything. Strip it so this works
+# the same on jq.exe (Windows) and jq (WSL/Linux).
 jq -r '.rules[] | select(.enabled == true) | .pattern' "$RULES_FILE" | while read -r pattern; do
+    pattern="${pattern%$'\r'}"
     if echo "$INPUT" | grep -qi "$pattern"; then
         MESSAGE=$(jq -r ".rules[] | select(.pattern == \"$pattern\") | .message" "$RULES_FILE")
         echo "❌ Forbidden word detected: $MESSAGE"
