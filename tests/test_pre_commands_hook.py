@@ -10,6 +10,11 @@ import pytest
 
 HOOKS_DIR = Path(__file__).parents[1] / "project-configs" / ".claude" / "hooks"
 SCRIPT = HOOKS_DIR / "hook_pre_commands.sh"
+# Windows resolves a bare "bash" to C:\Windows\System32\bash.exe (the WSL
+# launcher stub, where our Windows paths don't exist) before it ever
+# checks PATH, since CreateProcess searches System32 first. shutil.which
+# runs its own PATH search and correctly finds Git's bash.exe instead.
+BASH = shutil.which("bash") or "bash"
 
 pytestmark = pytest.mark.skipif(shutil.which("jq") is None, reason="jq is required")
 
@@ -24,8 +29,11 @@ def home(tmp_path: Path) -> Path:
 
 def run_hook(home: Path, command: str) -> str:
     payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
+    # as_posix(): MSYS2 bash.exe parses its argv as POSIX, so a Windows
+    # backslash path (e.g. "C:\...\hook.sh") loses every backslash to
+    # escape-sequence collapsing and the script is "not found".
     result = subprocess.run(
-        ["bash", str(SCRIPT)],
+        [BASH, SCRIPT.as_posix()],
         input=payload,
         env={**os.environ, "HOME": str(home)},
         capture_output=True,

@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
 SCRIPT = Path(__file__).parents[1] / "project-configs" / ".claude" / "hooks" / "hook_test_gate.sh"
+# Windows resolves a bare "bash" to C:\Windows\System32\bash.exe (the WSL
+# launcher stub, where our Windows paths don't exist) before it ever
+# checks PATH, since CreateProcess searches System32 first. shutil.which
+# runs its own PATH search and correctly finds Git's bash.exe instead.
+BASH = shutil.which("bash") or "bash"
 
 
 def make_fake_uv(bin_dir: Path, exit_code: int) -> Path:
@@ -41,7 +47,7 @@ def run_gate(
         "CLAUDE_TEST_GATE_TRUST_FILE": str(trust_file),
     }
     result = subprocess.run(
-        ["bash", str(SCRIPT)], env=env, capture_output=True, text=True, check=False
+        [BASH, SCRIPT.as_posix()], env=env, capture_output=True, text=True, check=False
     )
     return result, calls
 
