@@ -21,6 +21,11 @@ claude plugin marketplace add getsentry/plugin-claude || true
 claude plugin marketplace add anthropics/claude-plugins-official || true
 
 echo "== Installing plugins =="
+# NOTE: `claude plugin install` only accepts `<plugin>@<marketplace>` — the CLI
+# has no version-pin flag, so exact-version pinning (the project's normal
+# dependency policy) cannot be enforced at install time here. Instead this
+# script records the versions confirmed working on the original machine
+# (tasks/todo.md 2026-08-31 entry) and verifies them after install, below.
 claude plugin install example-skills@anthropic-agent-skills -y
 claude plugin install static-analysis@trailofbits -y
 claude plugin install second-opinion@trailofbits -y
@@ -33,6 +38,25 @@ claude plugin install sentry@sentry-plugin-marketplace -y
 
 echo "== Verifying =="
 claude plugin list
+
+echo "== Checking against known-good versions (confirmed 2026-08-31) =="
+declare -A EXPECTED_VERSIONS=(
+  [static-analysis]="1.4.2"
+  [second-opinion]="1.7.0"
+  [spec-to-code-compliance]="2.0.0"
+  [audit-context-building]="2.0.0"
+  [supply-chain-risk-auditor]="2.0.1"
+  [security-guidance]="2.0.7"
+  [claude-security]="0.10.2.3"
+  [sentry]="1.4.0"
+)
+PLUGIN_LIST_OUTPUT="$(claude plugin list 2>/dev/null)"
+for name in "${!EXPECTED_VERSIONS[@]}"; do
+  got="$(echo "$PLUGIN_LIST_OUTPUT" | grep -A1 "^\s*.\s*${name}@" | grep -oP 'Version: \K.*')"
+  if [ "$got" != "${EXPECTED_VERSIONS[$name]}" ]; then
+    echo "  WARN: ${name} is ${got:-<not found>}, expected ${EXPECTED_VERSIONS[$name]} — review changelog before relying on it."
+  fi
+done
 
 cat <<'EOF'
 

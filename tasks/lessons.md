@@ -3,11 +3,11 @@
 ## INDEX
 | カテゴリ     | 説明                          | 開始行 | 件数 |
 |--------------|-------------------------------|--------|------|
-| meta         | AIとの協働ルール              | 14     | 3    |
-| boundary     | データ型・変換・境界契約      | 25     | 2    |
-| architecture | 設計・責務・config            | 37     | 7    |
-| quality      | テスト・CI/CD・品質保証       | 73     | 1    |
-| ui           | フロントエンド・デザイン・VRM | 79     | 0    |
+| meta         | AIとの協働ルール              | 14     | 4    |
+| boundary     | データ型・変換・境界契約      | 35     | 2    |
+| architecture | 設計・責務・config            | 47     | 10   |
+| quality      | テスト・CI/CD・品質保証       | 98     | 1    |
+| ui           | フロントエンド・デザイン・VRM | 104    | 0    |
 
 ---
 
@@ -70,10 +70,25 @@
 - **原因**: `sfw`をすべてのパッケージマネージャーに適用できると誤認した
 - **対策**: `sfw`の正式対応範囲を先に確認する。非対応のAPTは公式署名済みリポジトリと固定版を使い、対応するCargo依存取得は`sfw`と`--locked`で保護する
 
+### security: sfwラッパーの自動更新が止まる場合は検証済み本体を使う
+- **症状**: npm版`sfw`のラッパーが最新バイナリ取得中に停滞し、パッケージ照会へ進まなかった
+- **原因**: 既存の`sfw-free`本体ではなく、npmラッパー自身の日次更新処理が先に走った
+- **対策**: `.sfw-cache/latest`のリンク先と`--help`を確認し、検証済みのSocket Firewall Free本体で固定版パッケージを照会・導入する
+
 ### config: ホーム側だけの設定はシンボリックリンクでも別PCへ移植されない
 - **症状**: `~/.codex/AGENTS.md` は存在しても、実体がGit管理外のWindowsホームにあり、cloneした別PCへ内容が移らない
 - **原因**: 配置先へのリンクはあったが、リポジトリ内に持ち運べる正本とリンク設計図の項目がなかった
 - **対策**: 完成版を `project-configs/` に正本化し、WSL・Windows両方の配置先を `aicli-links.json` で管理する
+
+### config: target_windowsの宣言だけでWindows側は自動反映されない
+- **症状**: WSL側`AGENTS.md`は正本と一致するが、Windows版Codexは8月21日の旧文面を読み続けた
+- **原因**: CLIはWindowsネイティブ実行時だけ`target_windows`を選ぶ。Windows配置先は正本へのリンクではなく、通常ファイルのままだった
+- **対策**: 自動反映を報告する前に、WSLとWindowsの両配置先で`LinkType`・リンク先・ハッシュを別々検証する
+
+### config: PowerShell 5.1がDeveloper Modeでもリンク作成に昇格を要求する
+- **症状**: Developer Mode有効環境で`New-Item -ItemType SymbolicLink`が`NewItemSymbolicLinkElevationRequired`で失敗した
+- **原因**: Windows PowerShell 5.1のリンク作成経路で、Developer Modeの非昇格作成が利用されなかった
+- **対策**: 既存ファイルを退避した後の自動復元を必須とし、Developer Mode対応のWindows Node.js `fs.symlinkSync`で作成、PowerShellの`LinkType`とSHA-256で検証する
 
 ### skills: Agentのskillsディレクトリ全体を置き換えない
 - **症状**: skills全体を共有リンクにすると、Codexの`.system`やプラグイン領域、Agent固有スキルまで巻き込む

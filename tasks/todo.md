@@ -15,6 +15,29 @@
 
 ## 現在のタスク
 
+### Windows Codex/Claude 管理リンク修復（2026-09-01 承認済み）
+
+- [x] spec: 4対象の旧ファイルを復元可能に保存し、Windows側から正本を読める管理リンクへ修復する
+- [x] Windowsネイティブのリンク作成条件と正本パスの到達性を確認
+- [x] 4対象をバックアップ後に正本へのリンクへ置換
+- [x] Windows/WSL両側でリンク実体・内容・ハッシュを検証（4件すべて`SymbolicLink`・正本とSHA-256一致）
+- [x] todo / lessons / alignment を実状に合わせて更新
+
+### Windows Codex AGENTS.md 反映不備の診断（2026-09-01 承認済み）
+
+- [x] spec: Windows Codexが読む旧文面の所在とリンク不成立の原因を、変更なしで特定する
+- [x] リポジトリ正本とWindows/WSL配置先のパス・リンク・内容を照合
+- [x] リンク設計図とCLIの状態判定を照合
+- [x] 根本原因と影響範囲を報告（Windows側は通常ファイル、WSL実行では`target_windows`が対象外）
+
+### OpenCode 導入確認・更新（2026-09-01 承認済み）
+
+- [x] spec: 導入有無・導入経路・更新可否と停止条件を定義
+- [x] OpenCode の実行パスと現在バージョンを確認（`~/.opencode/bin/opencode` v1.18.25）
+- [x] 導入経路に合わせて更新可否を判定し、npm版を `sfw` 経由で v1.18.25 へ更新
+- [x] 更新後のバージョンと起動を検証（優先バイナリ・npm版とも v1.18.25）
+- [x] 作業結果を todo / lessons に反映
+
 - [x] Skills: Codex・Claudeの自作スキルをshared/agent固有へ棚卸し
 - [x] Skills: Git管理内の正本へ既存スキルを保存
 - [x] Skills: status/apply/importと競合停止・バックアップを実装
@@ -82,8 +105,14 @@
 
 ## マルチモデル実装委任: codex-implementスキル新規作成(2026-08-31 承認・完了)
 
-- [x] ロードマップのステップ4・5(`claude-code-router`+Ollama+ChatGPT)を性能比較し不採用と判断
-      （既存の`delegate`スキルの方が実装品質・実績で上回るため。詳細はセッション内比較）
+- [x] ~~ロードマップのステップ4・5(`claude-code-router`+Ollama+ChatGPT)を性能比較し不採用と判断~~
+      **【2026-08-31 ユーザーにより訂正】** この「不採用」判断は誤り。(a)比較基準が
+      ロードマップ文書の仮モデル`qwen2.5-coder:14b`のままで、実際に導入済みの
+      `qwen3.8:27b`(性能向上済み)を確認していなかった、(b)目的を取り違えた
+      ——本来は「Codexのハーネスが使えない場面のための別ハーネス確保」が焦点で、
+      delegateは大きめのタスク向けで気軽に使えないため、routerは軽量な並列選択肢
+      として**共存**させる設計だった(排他選択ではない)。router+Ollama導入は
+      別タスクとして再検討する（[[feedback_comparison_baseline_and_framing]]参照）
 - [x] `delegate`スキル(agent-wrapper)はダッシュボード承認前提で「普段使い」には重いとユーザーが判断
 - [x] 軽量な代替として`codex-implement`スキルを新規作成（`codex exec -s workspace-write`の同期直接呼び出し、
       ダッシュボードなし）。project-configs/skills/claude/codex-implement/ に配置し`skills apply`で配布
@@ -99,3 +128,19 @@
       claude-security/supply-chain-risk-auditor/spec-to-code-compliance）の使い分け表を作成し、
       `security-guidance`と`static-analysis`の役割分担の課題もここで解消
 - [ ] `spec-to-code-compliance`用の`specs/`ディレクトリ運用は未整備（仕様書がある場合のみ使う設計）
+
+## レビュー体制の指摘反映（2026-08-31 承認・完了、トークンコスト最小の修正のみ）
+
+- [x] 棚卸し順序: 外部マーケットプレイスより先に`project-configs/skills/`・`.claude/agents/`を
+      確認するルールをCLAUDE.mdの発火ルール冒頭に追記
+- [x] レビュー系重複: `second-opinion`⇄`/codex:review`の二重呼び出し禁止、
+      `security-guidance`⇄`claude-security`の同一ループ内併用禁止をレビュー表の直後に追記
+- [x] バージョンピン留め: `claude plugin install`はCLIレベルの`@version`指定に非対応と判明。
+      `install-external-plugins.sh`にインストール後の既知バージョン照合(WARN出力)を追加し、
+      方針(exact version固定)とCLI制約の矛盾を明文化・部分的に補完
+- [x] vibe-diff/test-requirementsのSKILL.mdを確認 — 既に実態(hook委任・evals/なし)と一致しており
+      修正不要（乖離があったのは実体化しなかった別文書側のみ）
+- [x] 常時発火フックの累積コスト計測: `security-guidance`のStop hookが実測1.8kトークン超
+      （Agent SDK経由のLLMレビュー、PostToolUse/Bash(git commit・push)/Stopの全部で発火）と
+      判明したため`claude plugin disable security-guidance@claude-plugins-official`で無効化。
+      CLAUDE.mdのレビュー使い分け表・併用禁止の記述も実態に合わせて修正

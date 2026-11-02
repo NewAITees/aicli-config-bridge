@@ -103,6 +103,8 @@ flowchart LR
   - Link Blueprint: `aicli-links.json`
   - WSL Targets: `~/.codex/AGENTS.md`, `~/.claude/CLAUDE.md`
   - Windows Targets: `%USERPROFILE%\.codex\AGENTS.md`, `%USERPROFILE%\.claude\CLAUDE.md`
+- **反映条件 / Propagation Condition**: WSL実行は`target`のみを処理する。`target_windows`はWindowsネイティブでCLIを実行し、Windows配置先が正本へのリンクになった後に即時反映される
+- **現在状態 / Current State (2026-09-01)**: WSL側はリンク済み。Windows側の`AGENTS.md`・`CLAUDE.md`・`hooks.json`・RTKアダプターもUNC経由で正本へリンク済み。旧ファイルは各`.aicli-backup/`に保存
 - **指示に使える表現 / Human Labels**: AGENTS、CLAUDE、グローバル指示、AI運用規約
 - **曖昧になりやすい表現 / Ambiguous Labels**: ホーム側ファイルは正本ではなく、リポジトリ内正本への配置先として扱う
 
@@ -170,7 +172,13 @@ flowchart LR
 
 ## 意味の衝突記録 / Semantic Conflict Log
 
-現在、未解決の記録はない。
+### 2026-09-01「Windowsにも変更が自動反映される」
+- **対象候補 / Candidate Target**: Windows版Codex/Claudeのグローバル指示
+- **ユーザーの意図 / User Meaning**: リポジトリ正本の保存後、Windows版の新規セッションが新文面を読むこと
+- **AIの解釈 / Agent Interpretation**: 設計図に`target_windows`があるため、Windows配置先もリンク済みと誤認した
+- **実装上の実体 / Actual Implementation**: Windowsネイティブ実行時だけ`target_windows`を処理する。現在のWindows配置先は通常ファイル
+- **現在の解釈規則 / Current Rule**: 配置先ごとのリンク実体を検証した場合だけ「自動反映」と判定する
+- **状態 / Status**: resolved
 
 ## 未解決の観察 / Unresolved Observations
 
