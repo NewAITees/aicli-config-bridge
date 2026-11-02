@@ -28,3 +28,7 @@ Capture what worked, what failed, and how to make the next run smoother.
 - Keep the reflection short and concrete.
 - Do not turn this into a long retrospective.
 - Do not leave a repeated failure undocumented.
+
+## Record Templates
+
+For task records and the shared Project Tree, read `../../../../docs/skills/project-records.md`. Resolve this reference from the skill directory real path, not the working project.

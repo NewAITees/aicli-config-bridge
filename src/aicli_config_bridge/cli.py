@@ -40,7 +40,7 @@ def skills_apply(
     on_conflict: str = typer.Option("skip", "--on-conflict"),
     dry_run: bool = typer.Option(False, "--dry-run"),
 ) -> None:
-    """管理対象スキルをCodex・Claudeへリンク."""
+    """管理対象スキルをCodex・Claude・OpenCodeへリンク."""
     try:
         rows = SkillManager(project_root).apply(conflict=on_conflict, dry_run=dry_run)
     except (FileExistsError, ValueError) as exc:

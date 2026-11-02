@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-AGENTS = ("codex", "claude")
+AGENTS = ("codex", "claude", "opencode")
 
 
 @dataclass(frozen=True)
@@ -31,6 +31,7 @@ class SkillManager:
         self.homes = homes or {
             "codex": Path.home() / ".codex" / "skills",
             "claude": Path.home() / ".claude" / "skills",
+            "opencode": Path.home() / ".config" / "opencode" / "skills",
         }
 
     def sources_for(self, agent: str) -> dict[str, Path]:
@@ -51,23 +52,31 @@ class SkillManager:
         for agent in AGENTS:
             for name, source in self.sources_for(agent).items():
                 target = self.homes[agent] / name
-                if target.is_symlink() and target.resolve() == source.resolve():
-                    status = "linked"
-                elif target.is_symlink():
-                    status = "wrong_link"
-                elif target.exists():
-                    status = "existing"
-                else:
-                    status = "missing"
+                try:
+                    if target.is_symlink() and target.resolve() == source.resolve():
+                        status = "linked"
+                    elif target.is_symlink():
+                        status = "wrong_link"
+                    elif target.exists():
+                        status = "existing"
+                    else:
+                        status = "missing"
+                except OSError:
+                    status = "inaccessible"
                 rows.append(SkillStatus(agent, name, source, target, status))
         return rows
 
     def apply(self, conflict: str = "skip", dry_run: bool = False) -> list[SkillStatus]:
-        """Link all managed skills into Codex and Claude homes."""
+        """Link all managed skills into Codex, Claude and OpenCode homes."""
         if conflict not in {"skip", "backup"}:
             raise ValueError("conflict must be skip or backup")
 
-        conflicts = [row for row in self.statuses() if row.status in {"existing", "wrong_link"}]
+        rows = self.statuses()
+        inaccessible = [row for row in rows if row.status == "inaccessible"]
+        if inaccessible:
+            names = ", ".join(f"{row.agent}:{row.name}" for row in inaccessible)
+            raise FileExistsError(f"inaccessible skills require inspection: {names}")
+        conflicts = [row for row in rows if row.status in {"existing", "wrong_link"}]
         if conflicts and conflict == "skip":
             names = ", ".join(f"{row.agent}:{row.name}" for row in conflicts)
             raise FileExistsError(f"conflicting skills: {names}")
