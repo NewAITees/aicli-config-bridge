@@ -6,17 +6,18 @@ import subprocess
 from pathlib import Path
 
 SCRIPT = Path(__file__).parents[1] / "project-configs" / ".claude" / "hooks" / "hook_test_gate.sh"
-# Windows resolves a bare "bash" to C:\Windows\System32\bash.exe (the WSL
-# launcher stub, where our Windows paths don't exist) before it ever
-# checks PATH, since CreateProcess searches System32 first. shutil.which
-# runs its own PATH search and correctly finds Git's bash.exe instead.
+# The PATH may resolve bash to the WSL launcher, which cannot read native paths.
 BASH = shutil.which("bash") or "bash"
+if os.name == "nt" and (git := shutil.which("git")):
+    git_bash = Path(git).resolve().parents[1] / "bin" / "bash.exe"
+    if git_bash.is_file():
+        BASH = str(git_bash)
 
 
 def make_fake_uv(bin_dir: Path, exit_code: int) -> Path:
     calls = bin_dir / "uv.calls"
     uv = bin_dir / "uv"
-    uv.write_text(f'#!/bin/sh\necho "$@" >> "{calls}"\nexit {exit_code}\n')
+    uv.write_text(f'#!/bin/sh\necho "$@" >> "{calls.as_posix()}"\nexit {exit_code}\n', newline="\n")
     uv.chmod(0o755)
     return calls
 
@@ -39,7 +40,10 @@ def run_gate(
     calls = make_fake_uv(bin_dir, uv_exit)
     trust_file = tmp_path / "trusted"
     if trust_file_exists:
-        trust_file.write_text(f"# trusted projects\n{project if trusted else tmp_path / 'other'}\n")
+        trust_file.write_text(
+            f"# trusted projects\n{(project if trusted else tmp_path / 'other').as_posix()}\n",
+            newline="\n",
+        )
     env = {
         **os.environ,
         "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}",
@@ -47,7 +51,12 @@ def run_gate(
         "CLAUDE_TEST_GATE_TRUST_FILE": str(trust_file),
     }
     result = subprocess.run(
-        [BASH, SCRIPT.as_posix()], env=env, capture_output=True, text=True, check=False
+        [BASH, SCRIPT.as_posix()],
+        env=env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
     )
     return result, calls
 

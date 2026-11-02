@@ -70,25 +70,26 @@ def test_windows_node_adapter_adds_codex_allow_decision(tmp_path: Path) -> None:
     if node is None:
         return
 
-    fake_rtk = tmp_path / "rtk.exe"
-    fake_rtk.write_text(
-        "#!/bin/sh\n"
-        "cat >/dev/null\n"
-        "printf '%s\\n' "
-        '\'{"hookSpecificOutput":{"hookEventName":"PreToolUse",\''
-        '\'"updatedInput":{"command":"rtk git status"}}}\'\n',
-        encoding="utf-8",
+    rewritten = {
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "updatedInput": {"command": "rtk git status"},
+        }
+    }
+    # Node executes its first argument ("hook") as JavaScript on every platform.
+    (tmp_path / "hook").write_text(
+        "process.stdout.write(" + json.dumps(json.dumps(rewritten)) + ");", encoding="utf-8"
     )
-    fake_rtk.chmod(0o755)
-    env = {**os.environ, "RTK_BINARY": str(fake_rtk)}
-
+    env = {**os.environ, "RTK_BINARY": node}
     result = subprocess.run(
         [node, str(WINDOWS_SCRIPT)],
         input='{"tool_input":{"command":"git status"}}',
         capture_output=True,
         check=False,
         env=env,
+        cwd=tmp_path,
         text=True,
+        encoding="utf-8",
     )
 
     assert result.returncode == 0

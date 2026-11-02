@@ -105,7 +105,7 @@ def test_resolve_path_userprofile(temp_project: Path, monkeypatch: pytest.Monkey
     monkeypatch.setenv("USERPROFILE", "/tmp/winuser")
     setup = LinkSetup(temp_project)
     result = setup._resolve_path("%USERPROFILE%/.claude/CLAUDE.md")
-    assert "/tmp/winuser" in str(result)
+    assert result == Path("/tmp/winuser/.claude/CLAUDE.md").resolve()
 
 
 def test_load_config(temp_project: Path) -> None:

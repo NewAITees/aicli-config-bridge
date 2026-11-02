@@ -10,11 +10,12 @@ import pytest
 
 HOOKS_DIR = Path(__file__).parents[1] / "project-configs" / ".claude" / "hooks"
 SCRIPT = HOOKS_DIR / "hook_pre_commands.sh"
-# Windows resolves a bare "bash" to C:\Windows\System32\bash.exe (the WSL
-# launcher stub, where our Windows paths don't exist) before it ever
-# checks PATH, since CreateProcess searches System32 first. shutil.which
-# runs its own PATH search and correctly finds Git's bash.exe instead.
+# The PATH may resolve bash to the WSL launcher, which cannot read native paths.
 BASH = shutil.which("bash") or "bash"
+if os.name == "nt" and (git := shutil.which("git")):
+    git_bash = Path(git).resolve().parents[1] / "bin" / "bash.exe"
+    if git_bash.is_file():
+        BASH = str(git_bash)
 
 pytestmark = pytest.mark.skipif(shutil.which("jq") is None, reason="jq is required")
 
@@ -38,6 +39,7 @@ def run_hook(home: Path, command: str) -> str:
         env={**os.environ, "HOME": str(home)},
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=True,
     )
     return result.stdout
