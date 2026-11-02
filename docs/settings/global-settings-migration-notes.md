@@ -106,4 +106,14 @@ Bash(xargs grep -liE "outline")
 
 ## デプロイ状況（2026-11-02 実施）
 
+### Windows側
+
 `~/.claude/CLAUDE.md` と `~/.claude/settings.json` は、本リポジトリ管理版へのシンボリックリンクに切り替え済み（`uv run aicli-config-bridge apply`、`--on-conflict backup` で元ファイルは `~/.claude/.aicli-backup/` にバックアップ済み）。上記のプロジェクト別移行対象は、その**バックアップファイルの中に残っている**ので、各プロジェクト側へ移す作業はいつでも後から行える（データは失われていない）。
+
+### WSL側（方式が異なる）
+
+WSL側の `~/.claude/settings.json` は、Windows側と異なり**シンボリックリンクに切り替えていない**。WSL側は `enabledPlugins`（static-analysis / claude-security / sentry 等、Windows側とは別の構成）、TencentDB-Agent-Memory用の独自hook（SessionStart/UserPromptSubmit/Stop）、独自の`permissions.deny`リストなど、Windows側とは別物の、かつそれぞれ正当な個別設定を多く持っているため、本リポジトリ管理版で丸ごと上書きすると失われる。
+
+代わりに、既存ファイルへ本プロジェクトのhook登録（`sfw_pre_tool_use.py`をPreToolUse、`hook_test_gate.sh`をStop）だけを**追記**する方式にした（編集前に`~/.claude/.aicli-backup/settings.json.backup_20261102_manual_hook_wiring`へバックアップ済み）。`hook_pre_commands.sh`・`hook_stop_words.sh`・RTKは元から配線済みだった。
+
+この非対称性（Windows=シンボリックリンク全体管理、WSL=既存ファイルへの部分追記）は意図的なもの。`aicli-links.json`の`claude-global-settings`はWindows側の管理のみを表しており、WSL側はこのリポジトリのリンク管理の対象外として運用する。

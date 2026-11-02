@@ -3,11 +3,11 @@
 ## INDEX
 | カテゴリ     | 説明                          | 開始行 | 件数 |
 |--------------|-------------------------------|--------|------|
-| meta         | AIとの協働ルール              | 22     | 4    |
-| boundary     | データ型・変換・境界契約      | 43     | 2    |
-| architecture | 設計・責務・config            | 55     | 10   |
-| quality      | テスト・CI/CD・品質保証       | 106    | 3    |
-| ui           | フロントエンド・デザイン・VRM | 122    | 0    |
+| meta         | AIとの協働ルール              | 14     | 4    |
+| boundary     | データ型・変換・境界契約      | 35     | 2    |
+| architecture | 設計・責務・config            | 47     | 11   |
+| quality      | テスト・CI/CD・品質保証       | 103    | 3    |
+| ui           | フロントエンド・デザイン・VRM | 119    | 0    |
 
 ---
 
@@ -94,6 +94,11 @@
 - **症状**: skills全体を共有リンクにすると、Codexの`.system`やプラグイン領域、Agent固有スキルまで巻き込む
 - **原因**: 共有したい自作スキルと、ツールが管理するスキルの所有境界を分けていない
 - **対策**: Git正本をshared/codex/claudeへ分け、個々のスキルだけを配置する。`.system`、キャッシュ、秘密情報は除外する
+
+### config: settings.jsonはCLAUDE.mdと違い、丸ごとシンボリックリンク管理に向かない
+- **症状**: Windows側の`~/.claude/settings.json`をリポジトリ管理版へ丸ごとリンクしたのと同じやり方をWSL側にも適用しようとしたら、WSL側は`enabledPlugins`（static-analysis/claude-security/sentry等）、TencentDB-Agent-Memory用の独自hook、独自の`permissions.deny`リストを持っており、丸ごと差し替えると全て失われる状態だった
+- **原因**: `CLAUDE.md`は純粋なテキスト指示なので全マシンで同一にして問題ないが、`settings.json`は「共有すべき設定（本プロジェクトのhook配線）」と「マシン・用途ごとに正当に異なる設定（導入済みプラグイン、他ツールのhook、個人のdeny運用）」が同じファイルに混在している
+- **対策**: settings.jsonを他マシンへ展開するときは、丸ごとシンボリックリンクせず、既存ファイルに必要なhook登録だけを追記するマージ方式にする。`aicli-links.json`のファイル単位リンクという仕組みは、内容が完全に共有可能なファイル（CLAUDE.md等）にのみ使う
 
 ## quality — テスト・CI/CD・品質保証
 ### CLI境界: 機械可読出力と終了コードをテストで固定する
