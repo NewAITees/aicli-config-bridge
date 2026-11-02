@@ -7,10 +7,35 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/bin/python3 /home/perso/.codex/hooks/rtk_pre_tool_use.py",
-            "commandWindows": "node \"%USERPROFILE%\\.codex\\hooks\\rtk_pre_tool_use.mjs\"",
+            "command": "python3 -X utf8 ~/.codex/hooks/guard.py pre",
+            "commandWindows": "python -X utf8 -c \"from pathlib import Path; import runpy; runpy.run_path(str(Path.home()/'.codex/hooks/guard.py'), run_name='__main__')\" pre",
+            "timeout": 30,
+            "statusMessage": "Checking package and dangerous-command policy"
+          }
+        ]
+      },
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -X utf8 ~/.codex/hooks/rtk_pre_tool_use.py",
+            "commandWindows": "node -e \"import(require('node:url').pathToFileURL(require('node:path').join(require('node:os').homedir(),'.codex','hooks','rtk_pre_tool_use.mjs')).href)\"",
             "timeout": 30,
             "statusMessage": "Optimizing shell output with RTK"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -X utf8 ~/.codex/hooks/guard.py stop",
+            "commandWindows": "python -X utf8 -c \"from pathlib import Path; import runpy; runpy.run_path(str(Path.home()/'.codex/hooks/guard.py'), run_name='__main__')\" stop",
+            "timeout": 130,
+            "statusMessage": "Running tests in explicitly trusted projects"
           }
         ]
       }
