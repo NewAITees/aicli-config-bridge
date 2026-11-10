@@ -160,6 +160,10 @@ touch tasks/todo.md tasks/lessons.md tasks/alignment.md
   - 依存バージョンはexact固定（`^` `~` `>=` `latest` を使わない）。lockfileは必ずコミットする
   - Hookの対象外: poetry（`sfw` のTLS仲介で接続できない）、`npx` `uvx`、手動実行、Codex。これらは明示ルールとして守る
   - Hookの変更は `update-config` スキルを使う
+- **秘密情報をGitHubに載せない**: APIキー・トークン・パスワードを設定ファイル（`settings.json` の `env`、MCP設定、許可ルールのコマンド文字列、`CLAUDE.md` 等）へ直書きしない。環境変数かOSのキーチェーンを使う。
+  - リポジトリには `.gitignore`（`.credentials.json` / `history.jsonl` / `paste-cache/` / `settings.local.json` / `.env.*` / `*.pem` / `*.key` 等）と、`pre-commit` の gitleaks を置く。gitleaksが検出したコミットは拒否される。`--no-verify` で回避しない
+  - 誤検知は `.gitleaksignore`（fingerprint指定）で個別に除外する。検出を無効化しない
+  - 秘密情報を一度でもコミット・pushした場合は、履歴の書き換えより先にそのキーをローテーション（失効・再発行）する。履歴の書き換えはユーザー確認の上で行う
 
 ---
 

@@ -145,6 +145,7 @@ ignore = [
 - WSL対応のプラットフォーム検出
 - Dev Container設定
 - sfw PreToolUse Hook（`project-configs/.claude/hooks/sfw_pre_tool_use.py`、仕様は `docs/skills/sfw-common-spec.md`）
+- 秘密情報の混入防止（`.gitignore` の秘密情報パターン + `.pre-commit-config.yaml` の gitleaks。ルール本文は `project-configs/.claude/CLAUDE.md`）
 
 #### 未実装 ❌
 - Windowsネイティブでのコピー運用（`_create_link` は常にシンボリックリンクを作成）

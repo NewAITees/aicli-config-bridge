@@ -205,3 +205,18 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Secrets and AI CLI local state (never commit)
+.credentials.json
+.claude.json.bak*
+history.jsonl
+paste-cache/
+shell-snapshots/
+session-env/
+debug/
+settings.local.json
+.env.*
+!.env.example
+*.pem
+*.key
+.codex/auth.json
